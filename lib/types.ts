@@ -38,6 +38,8 @@ export type Order = {
   quantityKg: number;
   split: PriceSplit;
   status: "placed";
+  /** Set when the pickup partner turns the job down; it is then offered to the next partner. */
+  partnerStatus?: "rejected";
   createdAt: string;
 };
 
