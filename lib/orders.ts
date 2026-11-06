@@ -77,6 +77,7 @@ export async function placeOrder(
     farmerId: farmer.id,
     orderId: order.id,
     ...texts,
+    farmerTotal: orderTotals(order.split, order.quantityKg).farmerTotal,
     heard: false,
     createdAt: deps.now.toISOString(),
   });

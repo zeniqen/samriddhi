@@ -40,6 +40,15 @@ button {
   -webkit-user-select: none;
 }
 
+::selection {
+  background: var(--sarson);
+  color: var(--ink);
+}
+
+input {
+  caret-color: var(--bahi);
+}
+
 :focus-visible {
   outline: 3px solid var(--ink);
   outline-offset: 3px;

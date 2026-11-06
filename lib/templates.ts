@@ -47,11 +47,16 @@ export function cropName(crop: Crop, lang: Lang): string {
   return CROP_NAMES[crop][lang];
 }
 
-/** "2026-11-08" → "8 नवंबर" / "8 ਨਵੰਬਰ" (Latin digits so numbers stay readable). */
+// Our own month names: browsers differ (Chrome has no Punjabi months and prints "M11 8").
+const MONTHS: Record<Lang, string[]> = {
+  hi: ["जनवरी", "फ़रवरी", "मार्च", "अप्रैल", "मई", "जून", "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"],
+  pa: ["ਜਨਵਰੀ", "ਫ਼ਰਵਰੀ", "ਮਾਰਚ", "ਅਪ੍ਰੈਲ", "ਮਈ", "ਜੂਨ", "ਜੁਲਾਈ", "ਅਗਸਤ", "ਸਤੰਬਰ", "ਅਕਤੂਬਰ", "ਨਵੰਬਰ", "ਦਸੰਬਰ"],
+};
+
+/** "2026-11-08" → "8 नवंबर" / "8 ਨਵੰਬਰ" (Latin digits so numbers match the spoken read-back). */
 export function formatDate(iso: string, lang: Lang): string {
-  return new Intl.DateTimeFormat(`${lang}-IN-u-nu-latn`, { day: "numeric", month: "long", timeZone: "UTC" }).format(
-    new Date(`${iso}T00:00:00Z`),
-  );
+  const [, month, day] = iso.split("-").map(Number);
+  return `${day} ${MONTHS[lang][month - 1]}`;
 }
 
 const ORDER: [keyof ListingFields, TemplateKey][] = [

@@ -74,3 +74,8 @@ test("listing with an unknown farmer still places the order without crashing", a
   const r = await placeOrder({ listingId: "l2", buyerId: "b1", quantityKg: 10 }, { store, confirm, now: NOW });
   expect(r.ok).toBe(true);
 });
+
+test("notification carries the farmer's payout for the card", async () => {
+  await placeOrder({ listingId: "l1", buyerId: "b1", quantityKg: 100 }, { store, confirm, now: NOW });
+  expect((await store.listNotifications("f1"))[0].farmerTotal).toBe(1400);
+});

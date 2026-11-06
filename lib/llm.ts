@@ -1,5 +1,5 @@
 // The only code that talks to Ollama Cloud. Works in English only.
-import type { ConversationState, Crop, Intent, ListingFields, LlmTurn } from "./types";
+import type { ConversationState, Intent, ListingFields, LlmTurn } from "./types";
 
 export class LlmError extends Error {}
 
@@ -97,28 +97,4 @@ export async function llmTurn(input: {
   }
   if (!isLlmTurn(parsed)) throw new LlmError("Ollama JSON does not match LlmTurn");
   return parsed;
-}
-
-export async function llmConfirmation(facts: {
-  buyerName: string;
-  kg: number;
-  crop: Crop;
-  pricePerKg: number;
-  total: number;
-  pickupDate: string;
-}): Promise<string> {
-  const content = await chat([
-    {
-      role: "system",
-      content:
-        "Write a warm, simple 2-sentence message in English to a farmer confirming a sale. " +
-        "Use only the numbers given, written as digits. Write the date as day and month name, e.g. 8 November. " +
-        "No greetings like 'Dear', no emojis, no other numbers.",
-    },
-    {
-      role: "user",
-      content: `Buyer: ${facts.buyerName}. Quantity: ${facts.kg} kg of ${facts.crop}. Price: ${facts.pricePerKg} rupees per kg. Farmer receives: ${facts.total} rupees. Pickup date: ${facts.pickupDate}.`,
-    },
-  ]);
-  return content.trim();
 }

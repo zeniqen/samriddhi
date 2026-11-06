@@ -47,6 +47,8 @@ export type Notification = {
   orderId: string;
   textEnglish: string;
   textLocal: string;
+  /** What the farmer receives, in rupees, shown large on the order card. */
+  farmerTotal?: number;
   heard: boolean;
   createdAt: string;
 };
