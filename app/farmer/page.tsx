@@ -8,7 +8,7 @@ import { playReply, startRecording, stopReply } from "@/lib/audio-client";
 import { buyerInScript, readBackVars } from "@/lib/readback";
 import { cropName, formatDate, t, type TemplateKey } from "@/lib/templates";
 import { ui } from "@/lib/ui-copy";
-import type { Lang, ListingFields, Notification } from "@/lib/types";
+import type { Lang, Listing, ListingFields, Notification } from "@/lib/types";
 
 type TurnResponse = {
   fields: ListingFields;
@@ -51,6 +51,8 @@ export default function FarmerPage() {
   const [typed, setTyped] = useState("");
   const [listedId, setListedId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [myListings, setMyListings] = useState<Listing[]>([]);
+  const [ready, setReady] = useState(false);
   const stopRef = useRef<null | (() => Promise<Blob>)>(null);
   // Browsers only allow sound after the person has touched the page once.
   const interactedRef = useRef(false);
@@ -63,6 +65,7 @@ export default function FarmerPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLang(readLang());
     setFarmerId(new URLSearchParams(window.location.search).get("farmer") ?? "f1");
+    setReady(true);
   }, []);
 
   /** Play text aloud without replacing the AI's line (order cards, examples, guides). */
@@ -103,7 +106,7 @@ export default function FarmerPage() {
   );
 
   const sendTurn = useCallback(
-    async (payload: { audio?: Blob; text?: string; confirm?: boolean }) => {
+    async (payload: { audio?: Blob; text?: string; confirm?: boolean; demo?: boolean }) => {
       setMic("thinking");
       const form = new FormData();
       sessionRef.current ??= newSessionId();
@@ -113,6 +116,7 @@ export default function FarmerPage() {
       if (payload.audio) form.append("audio", payload.audio);
       if (payload.text) form.append("text", payload.text);
       if (payload.confirm) form.append("confirm", "true");
+      if (payload.demo) form.append("demo", "true");
       try {
         const res = await fetch("/api/turn", { method: "POST", body: form });
         const data: TurnResponse = await res.json();
@@ -127,7 +131,11 @@ export default function FarmerPage() {
           setTapToFill(data.tapToFill);
           if (data.complete) setShowKeyboard(false); // one decision at a time: confirm or say again
         }
-        await say(data.replyLocal);
+        // The demo pre-fill arrives before the farmer has touched the page, so it is shown, not spoken.
+        if (payload.demo) {
+          setReply(data.replyLocal);
+          setMic("idle");
+        } else await say(data.replyLocal);
       } catch {
         await say(t("askAgain", lang));
       }
@@ -174,14 +182,25 @@ export default function FarmerPage() {
     setListedId(null);
   };
 
-  // Poll for order confirmations.
+  // Open with a ready-made demo listing so the card is never blank; "say it all again" clears it.
+  const demoLoaded = useRef(false);
   useEffect(() => {
+    if (!ready || demoLoaded.current) return;
+    demoLoaded.current = true;
+    void sendTurn({ demo: true });
+  }, [ready, sendTurn]);
+
+  // Poll for order confirmations and this farmer's live listings.
+  useEffect(() => {
+    if (!ready) return;
     let alive = true;
     const load = async () => {
       try {
-        const res = await fetch(`/api/notifications?farmerId=${farmerId}`);
-        const data = await res.json();
-        if (alive) setNotifications(data.notifications ?? []);
+        const [nRes, lRes] = await Promise.all([fetch(`/api/notifications?farmerId=${farmerId}`), fetch("/api/listings")]);
+        const [nData, lData] = await Promise.all([nRes.json(), lRes.json()]);
+        if (!alive) return;
+        setNotifications(nData.notifications ?? []);
+        setMyListings((lData.listings ?? []).filter((l: Listing) => l.farmerId === farmerId));
       } catch {}
     };
     load();
@@ -190,7 +209,7 @@ export default function FarmerPage() {
       alive = false;
       clearInterval(id);
     };
-  }, [farmerId]);
+  }, [farmerId, ready]);
 
   /** The order sentence in whichever language is on screen now (older orders keep their stored text). */
   const orderText = useCallback(
@@ -252,6 +271,7 @@ export default function FarmerPage() {
   const redoAll = () => {
     speakSeq.current++;
     stopReply();
+    startOver(); // "say it all again" means a fresh listing, not edits on top of the old one
     void toggleRecording();
   };
 
@@ -397,6 +417,30 @@ export default function FarmerPage() {
             </form>
           )}
         </>
+      )}
+
+      {myListings.length > 0 && (
+        <section className="mt-2 flex flex-col gap-3" aria-label={ui("myListings", lang)}>
+          <h2 className="font-display text-xl font-semibold text-forest">{ui("myListings", lang)}</h2>
+          <ul className="raised divide-y divide-line overflow-hidden rounded-2xl">
+            {myListings.map((l) => (
+              <li key={l.id} className="flex items-center justify-between gap-4 px-4 py-3.5">
+                <div>
+                  <p className="font-display text-lg font-semibold text-forest">
+                    {cropName(l.crop, lang)}, {l.remainingKg} {ui("kgLeft", lang)}
+                  </p>
+                  <p className="text-sm text-soil-soft">
+                    {ui("pickup", lang)} {formatDate(l.pickupDate, lang)}
+                  </p>
+                </div>
+                <p className="figure text-xl font-semibold text-forest">
+                  ₹{l.askPricePerKg}
+                  <span className="text-sm font-normal text-soil-soft">{ui("perKg", lang)}</span>
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <section className="mt-2 flex flex-col gap-3" aria-label={ui("orders", lang)}>

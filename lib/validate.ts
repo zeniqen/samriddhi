@@ -44,6 +44,22 @@ export function findVillageInNative(transcript: string): string | null {
   return null;
 }
 
+// Words translation produces when it garbles a place name ("गाँव दाखा" → "show it to the village").
+const NOT_A_PLACE = new Set([
+  "village", "gaon", "pind", "account", "show", "the", "it", "to", "from", "of", "my", "is", "pickup", "pick", "up",
+  "today", "tomorrow", "day", "after", "kilo", "kilos", "kg", "rupees", "rupee", "price", "tomato", "tomatoes",
+  "onion", "onions", "potato", "potatoes", "yes", "no", "here", "there",
+]);
+
+/** A place outside the seed list: 1–3 alphabetic words that aren't filler, title-cased ("ghaziabad" → "Ghaziabad"). */
+function plausiblePlace(raw: string): string | null {
+  const words = raw.trim().replace(/\b(village|pind|gaon|gram)\b/gi, " ").split(/\s+/).filter(Boolean);
+  if (words.length === 0 || words.length > 3) return null;
+  if (!words.every((w) => /^[A-Za-z][A-Za-z'-]{1,}$/.test(w))) return null;
+  if (words.some((w) => NOT_A_PLACE.has(w.toLowerCase()))) return null;
+  return words.map((w) => w[0].toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+}
+
 function normaliseCrop(raw: string): Crop | null {
   const c = raw.toLowerCase().trim().replace(/(es|s)$/, "");
   return (CROPS as string[]).includes(c) ? (c as Crop) : null;
@@ -73,7 +89,8 @@ export function validateUpdates(
     else rejected.push("askPricePerKg");
   }
   if (u.village !== undefined) {
-    const v = matchVillage(String(u.village));
+    // Known villages first (fixes near-misses like "Dhaka" → "Dakha"), then any real-looking place name.
+    const v = matchVillage(String(u.village)) ?? plausiblePlace(String(u.village));
     if (v) accepted.village = v;
     else rejected.push("village");
   }

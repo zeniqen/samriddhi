@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { localize } from "@/lib/localize";
-import { newConversation, runTurn, shouldCreateListing } from "@/lib/conversation";
+import { demoFields, newConversation, runTurn, shouldCreateListing } from "@/lib/conversation";
 import { LlmError } from "@/lib/llm";
 import { t } from "@/lib/templates";
 import type { LlmTurn } from "@/lib/types";
@@ -125,4 +125,16 @@ test("localize keeps the village's native spelling (translator said ढाका
   );
   expect(r.text).toContain("दाखा");
   expect(r.text).not.toContain("ढाका");
+});
+
+describe("demo listing", () => {
+  test("uses the farmer's own village and a pickup two days out", () => {
+    expect(demoFields({ id: "f4", name: "Gurpreet Singh", village: "Mullanpur", lang: "pa", phone: "" }, "2026-11-06")).toEqual({
+      crop: "tomato",
+      quantityKg: 100,
+      askPricePerKg: 16,
+      village: "Mullanpur",
+      pickupDate: "2026-11-08",
+    });
+  });
 });

@@ -1,4 +1,4 @@
-import { isComplete, newConversation, runTurn, shouldCreateListing, TAP_TO_FILL_AFTER } from "@/lib/conversation";
+import { demoFields, isComplete, newConversation, runTurn, shouldCreateListing, TAP_TO_FILL_AFTER } from "@/lib/conversation";
 import { todayIST } from "@/lib/dates";
 import { allowedFromFields, allowedNumbers, mentionsAll } from "@/lib/factcheck";
 import { llmTurn } from "@/lib/llm";
@@ -41,7 +41,8 @@ export async function POST(req: Request) {
   if (!sessionId) return Response.json({ error: "sessionId required" }, { status: 400 });
 
   const store = getStore();
-  if (!(await store.getFarmer(farmerId))) return Response.json({ error: "unknown farmer" }, { status: 400 });
+  const farmer = await store.getFarmer(farmerId);
+  if (!farmer) return Response.json({ error: "unknown farmer" }, { status: 400 });
   const today = todayIST();
   let state = (await store.getConversation(sessionId)) ?? newConversation(sessionId, lang, farmerId);
   state = { ...state, lang };
@@ -57,6 +58,12 @@ export async function POST(req: Request) {
       ...extra,
     });
   };
+
+  // Demo: pre-fill an empty listing so the screen is never blank in a demo. Read-back is the fixed sentence.
+  if (form.get("demo") === "true") {
+    if (Object.keys(state.fields).length === 0) state = { ...state, fields: demoFields(farmer, today) };
+    return respond(t("readBack", lang, readBackVars(state.fields, lang)), "");
+  }
 
   // ✅ tap
   if (form.get("confirm") === "true") {

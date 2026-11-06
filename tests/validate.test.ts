@@ -69,3 +69,19 @@ describe("village from translation quirks", () => {
     expect(findVillageInNative("सौ किलो टमाटर")).toBeNull();
   });
 });
+
+describe("villages outside the seed list", () => {
+  test("accepts a real place name the farmer said (title-cased)", () => {
+    expect(validateUpdates({ village: "Ghaziabad" }, "2026-11-06").accepted.village).toBe("Ghaziabad");
+    expect(validateUpdates({ village: "ghaziabad" }, "2026-11-06").accepted.village).toBe("Ghaziabad");
+    expect(validateUpdates({ village: "Village Khanna" }, "2026-11-06").accepted.village).toBe("Khanna");
+  });
+  test("still prefers the known list for near-misses", () => {
+    expect(validateUpdates({ village: "Dhaka" }, "2026-11-06").accepted.village).toBe("Dakha");
+  });
+  test("rejects translation garbage and non-names", () => {
+    for (const bad of ["account", "show it to the village", "the village", "100", "tomorrow", "Ghaziabad!!", ""]) {
+      expect(validateUpdates({ village: bad }, "2026-11-06").accepted.village).toBeUndefined();
+    }
+  });
+});
