@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { PriceSplit, rupees } from "@/components/PriceSplit";
+import { PriceSplit } from "@/components/PriceSplit";
 import { orderTotals } from "@/lib/pricing";
 import type { Buyer, Listing, PriceSplit as Split } from "@/lib/types";
 
@@ -71,18 +71,18 @@ export default function BuyerPage() {
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-8 sm:px-8">
-      <header className="flex flex-wrap items-end justify-between gap-6 border-b-2 border-terracotta pb-5">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-8 sm:px-8 sm:py-10">
+      <header className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <p className="font-ledger text-4xl leading-none text-forest">Samriddhi</p>
-          <h1 className="mt-2 text-xl font-semibold text-forest">Tomatoes from Ludhiana farms, priced in the open</h1>
+          <p className="font-display text-3xl font-bold leading-none tracking-tight text-forest">Samriddhi</p>
+          <h1 className="mt-2 text-lg text-soil">Tomatoes from Ludhiana farms, priced in the open</h1>
         </div>
-        <label className="flex flex-col text-sm text-soil-soft">
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-soil-soft">
           Ordering for
           <select
             value={buyerId}
             onChange={(e) => setBuyerId(e.target.value)}
-            className="mt-1 border-2 border-forest bg-paper px-3 py-2 text-base text-forest"
+            className="raised min-h-11 rounded-full px-4 text-base font-medium text-forest"
           >
             {buyers.map((b) => (
               <option key={b.id} value={b.id}>
@@ -93,33 +93,36 @@ export default function BuyerPage() {
         </label>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
-        <section aria-labelledby="board-title">
-          <h2 id="board-title" className="mb-3 font-ledger text-2xl text-forest">
-            Today’s board
-          </h2>
+      <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-8">
+        <section aria-labelledby="board-title" className="raised overflow-hidden rounded-3xl">
+          <div className="flex items-baseline justify-between gap-4 px-6 pb-4 pt-6">
+            <h2 id="board-title" className="font-display text-xl font-semibold text-forest">
+              Today’s board
+            </h2>
+            <p className="text-sm text-soil-soft">{listings.length} listings</p>
+          </div>
           {listings.length === 0 ? (
-            <p className="text-soil-soft">No produce listed right now. New listings appear here as farmers speak them.</p>
+            <p className="px-6 pb-6 text-soil-soft">No produce listed right now. New listings appear here as farmers speak them.</p>
           ) : (
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b-2 border-forest text-left text-sm text-soil-soft">
-                  <th className="py-2 font-normal">Farmer</th>
-                  <th className="hidden py-2 font-normal sm:table-cell">Crop</th>
-                  <th className="py-2 text-right font-normal">Kg left</th>
-                  <th className="hidden py-2 text-right font-normal sm:table-cell">Pickup</th>
-                  <th className="py-2 text-right font-normal">₹ per kg</th>
+                <tr className="border-y border-line bg-page/60 text-left text-sm text-soil-soft">
+                  <th className="py-2.5 pl-6 font-medium">Farmer</th>
+                  <th className="hidden py-2.5 font-medium sm:table-cell">Crop</th>
+                  <th className="py-2.5 text-right font-medium">Kg left</th>
+                  <th className="hidden py-2.5 text-right font-medium sm:table-cell">Pickup</th>
+                  <th className="py-2.5 pr-6 text-right font-medium">₹ per kg</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-line">
                 {listings.map((l) => {
                   const isSelected = selectedId === l.id;
                   return (
                     <tr
                       key={l.id}
-                      className={`border-b border-rule ${isSelected ? "bg-paper shadow-[inset_4px_0_0_var(--gold)]" : "hover:bg-paper/60"}`}
+                      className={`transition-colors ${isSelected ? "bg-sage-soft" : "hover:bg-page/70"}`}
                     >
-                      <td className="py-3 pl-3">
+                      <td className="py-3.5 pl-6">
                         <button
                           type="button"
                           onClick={() => open(l)}
@@ -133,10 +136,12 @@ export default function BuyerPage() {
                           </span>
                         </button>
                       </td>
-                      <td className="hidden py-3 sm:table-cell">{title(l.crop)}</td>
-                      <td className="py-3 text-right tabular-nums">{l.remainingKg}</td>
-                      <td className="hidden py-3 text-right sm:table-cell">{fmtDate(l.pickupDate)}</td>
-                      <td className="py-3 pr-3 text-right font-ledger text-xl tabular-nums">{l.split.buyerPerKg.toFixed(2)}</td>
+                      <td className="hidden py-3.5 text-soil sm:table-cell">{title(l.crop)}</td>
+                      <td className="figure py-3.5 text-right text-soil">{l.remainingKg}</td>
+                      <td className="hidden py-3.5 text-right text-soil sm:table-cell">{fmtDate(l.pickupDate)}</td>
+                      <td className="figure py-3.5 pr-6 text-right text-xl font-semibold text-forest">
+                        {l.split.buyerPerKg.toFixed(2)}
+                      </td>
                     </tr>
                   );
                 })}
@@ -145,30 +150,30 @@ export default function BuyerPage() {
           )}
         </section>
 
-        <aside className="ledger self-start rounded-sm py-5 pl-14 pr-5 lg:sticky lg:top-6" aria-live="polite">
+        <aside className="raised self-start rounded-3xl p-6 lg:sticky lg:top-6" aria-live="polite">
           {!selected ? (
             <div className="flex flex-col gap-2">
-              <h2 className="font-ledger text-2xl text-forest">Where the money goes</h2>
-              <p className="text-soil-soft">Choose a farmer on the board to see each rupee of the price, then place your order.</p>
+              <h2 className="font-display text-xl font-semibold text-forest">Where the money goes</h2>
+              <p className="text-soil">Choose a farmer on the board to see each rupee of the price, then place your order.</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-6">
               <div>
-                <h2 className="font-ledger text-2xl text-forest">{selected.farmerName}</h2>
-                <p className="text-soil-soft">
+                <h2 className="font-display text-2xl font-semibold text-forest">{selected.farmerName}</h2>
+                <p className="mt-1 text-soil">
                   {title(selected.crop)} from {selected.village}, {selected.remainingKg} kg left, pickup{" "}
                   {fmtDate(selected.pickupDate)}
                 </p>
               </div>
               <PriceSplit split={selected.split} />
               <form
-                className="flex flex-col gap-3 border-t-2 border-forest pt-4"
+                className="flex flex-col gap-4 rounded-2xl bg-page/70 p-4"
                 onSubmit={(e) => {
                   e.preventDefault();
                   placeOrder();
                 }}
               >
-                <label className="flex items-center justify-between gap-3 font-semibold">
+                <label className="flex items-center justify-between gap-3 font-semibold text-forest">
                   Quantity in kg
                   <input
                     type="number"
@@ -176,21 +181,21 @@ export default function BuyerPage() {
                     max={selected.remainingKg}
                     value={kg}
                     onChange={(e) => setKg(e.target.value)}
-                    className="w-28 border-2 border-forest bg-page px-3 py-2 text-right text-lg tabular-nums"
+                    className="figure min-h-11 w-28 rounded-xl bg-surface px-3 text-right text-lg text-forest shadow-[0_0_0_1px_var(--line)]"
                   />
                 </label>
                 {totals && (
-                  <dl className="grid grid-cols-[1fr_auto] gap-y-1">
-                    <dt className="text-soil-soft">You pay</dt>
-                    <dd className="text-right text-lg font-bold tabular-nums">{inr(totals.buyerTotal)}</dd>
-                    <dt className="text-soil-soft">{selected.farmerName} receives</dt>
-                    <dd className="text-right text-lg font-bold text-forest tabular-nums">{inr(totals.farmerTotal)}</dd>
+                  <dl className="grid grid-cols-[1fr_auto] gap-y-1.5">
+                    <dt className="text-soil">You pay</dt>
+                    <dd className="figure text-right text-xl font-semibold text-forest">{inr(totals.buyerTotal)}</dd>
+                    <dt className="text-soil">{selected.farmerName} receives</dt>
+                    <dd className="figure text-right text-xl font-semibold text-forest">{inr(totals.farmerTotal)}</dd>
                   </dl>
                 )}
                 <button
                   type="submit"
                   disabled={placing || !(qty > 0)}
-                  className="bg-forest py-3 text-lg font-bold text-paper disabled:opacity-50"
+                  className="min-h-12 rounded-full bg-forest text-lg font-semibold text-surface shadow-[0_10px_24px_-12px_rgb(35_71_53/0.7)] transition-transform active:scale-[0.99] disabled:opacity-50"
                 >
                   {placing ? "Placing order…" : `Place order${qty > 0 ? ` for ${qty} kg` : ""}`}
                 </button>
@@ -203,8 +208,8 @@ export default function BuyerPage() {
                     {status.text}
                   </p>
                 )}
-                <p className="text-xs text-soil-soft">All figures are illustrative assumptions. Per kg: {rupees(selected.split.buyerPerKg)}.</p>
               </form>
+              <p className="text-xs text-soil-soft">All figures are illustrative assumptions.</p>
             </div>
           )}
         </aside>

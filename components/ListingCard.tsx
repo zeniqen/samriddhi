@@ -16,7 +16,7 @@ const ROWS: Row[] = [
 
 export const inr = (n: number) => `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
-/** The farmer's sale slip (parchi): each line inks in as it is heard; the page closes on the total.
+/** The farmer's listing as it is heard: five lines, a progress bar, and the total in a forest panel.
  *  With onTapField, any line (empty or filled) can be tapped to say just that line. */
 export function ListingCard({
   fields,
@@ -29,72 +29,75 @@ export function ListingCard({
   onTapField?: (field: keyof ListingFields) => void;
   disabled?: boolean;
 }) {
+  const filledCount = ROWS.filter((r) => fields[r.field] !== undefined).length;
   const total =
     fields.quantityKg !== undefined && fields.askPricePerKg !== undefined
       ? fields.quantityKg * fields.askPricePerKg
       : undefined;
 
   return (
-    <section className="ledger rounded-sm pb-2 pt-3" aria-label={ui("slipTitle", lang)}>
-      <h2 className="pb-2 pl-12 pr-4 font-ledger text-xl text-forest">{ui("slipTitle", lang)}</h2>
-      <dl>
+    <section className="raised overflow-hidden rounded-3xl" aria-label={ui("slipTitle", lang)}>
+      <header className="flex items-center justify-between gap-4 px-5 pb-3 pt-5">
+        <h2 className="font-display text-lg font-semibold text-forest">{ui("slipTitle", lang)}</h2>
+        {/* Five fields in order: the bar is a real sequence, so it earns its segments. */}
+        <div className="flex items-center gap-1" role="img" aria-label={`${filledCount}/5`}>
+          {ROWS.map((r) => (
+            <span
+              key={r.field}
+              className={`h-1.5 w-5 rounded-full transition-colors duration-300 ${
+                fields[r.field] !== undefined ? "bg-sage" : "bg-line"
+              }`}
+            />
+          ))}
+        </div>
+      </header>
+      <dl className="divide-y divide-line border-t border-line">
         {ROWS.map((row) => {
           const filled = fields[row.field] !== undefined;
           const value = filled ? row.value(fields, lang) : "";
-          return (
-            <div key={row.field} className="grid grid-cols-[5.5rem_1fr] items-center border-t border-rule pl-12 pr-4">
-              <dt className="py-3 text-base text-soil-soft">{ui(row.label, lang)}</dt>
-              <dd className="py-1.5">
-                {filled && onTapField ? (
-                  // A filled line can be tapped to say just that line again.
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => onTapField(row.field)}
-                    aria-label={`${ui(row.label, lang)}: ${value}. ${ui("retry", lang)}`}
-                    className="flex min-h-11 w-full items-center justify-between gap-2 text-left enabled:active:bg-gold/25"
-                  >
-                    <span key={value} className="ink-in inline-block text-[1.65rem] font-bold leading-tight text-forest">
-                      {value}
-                    </span>
-                    <Mic aria-hidden className="h-5 w-5 shrink-0 text-soil-soft" strokeWidth={2} />
-                  </button>
-                ) : filled ? (
-                  <span key={value} className="ink-in inline-block text-[1.65rem] font-bold leading-tight text-forest">
+          const content = (
+            <>
+              <dt className="text-base text-soil-soft">{ui(row.label, lang)}</dt>
+              <dd className="flex items-center gap-3">
+                {filled ? (
+                  <span key={value} className="settle font-display text-2xl font-semibold leading-none text-forest">
                     {value}
                   </span>
-                ) : onTapField ? (
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => onTapField(row.field)}
-                    aria-label={`${ui(row.label, lang)}: ${ui("speakHint", lang)}`}
-                    className="flex min-h-11 w-full items-center gap-2 border-b-2 border-dashed border-soil-soft/60 text-left text-lg text-soil-soft enabled:active:bg-gold/25"
-                  >
-                    <Mic aria-hidden className="h-5 w-5" strokeWidth={2.25} />
-                    {ui("speakHint", lang)}
-                  </button>
                 ) : (
-                  <span aria-hidden className="block h-9 border-b-2 border-dashed border-soil-soft/60" />
+                  <span className={`text-base ${onTapField ? "text-soil-soft" : "text-soil-soft/70"}`}>
+                    {onTapField ? ui("speakHint", lang) : "—"}
+                  </span>
                 )}
+                {onTapField && <Mic aria-hidden className="h-4 w-4 shrink-0 text-soil-soft" strokeWidth={2.25} />}
               </dd>
+            </>
+          );
+          return onTapField ? (
+            <button
+              key={row.field}
+              type="button"
+              disabled={disabled}
+              onClick={() => onTapField(row.field)}
+              aria-label={`${ui(row.label, lang)}: ${filled ? value : ui("speakHint", lang)}`}
+              className="flex min-h-14 w-full items-center justify-between gap-4 px-5 text-left transition-colors enabled:hover:bg-sage-soft/50 enabled:active:bg-sage-soft"
+            >
+              {content}
+            </button>
+          ) : (
+            <div key={row.field} className="flex min-h-14 items-center justify-between gap-4 px-5">
+              {content}
             </div>
           );
         })}
-        {total !== undefined && (
-          <div className="grid grid-cols-[5.5rem_1fr] items-baseline border-t-2 border-forest pl-12 pr-4 pt-2">
-            <dt className="py-2 font-ledger text-xl text-forest">{ui("total", lang)}</dt>
-            <dd className="py-1">
-              <span
-                key={total}
-                className="ink-in double-rule inline-block pb-0.5 text-[1.9rem] font-bold leading-tight text-forest tabular-nums"
-              >
-                {inr(total)}
-              </span>
-            </dd>
-          </div>
-        )}
       </dl>
+      {total !== undefined && (
+        <div className="flex items-end justify-between gap-4 bg-forest px-5 py-4">
+          <span className="pb-1 text-base font-medium text-sage-soft">{ui("total", lang)}</span>
+          <span key={total} className="settle figure text-4xl font-semibold leading-none text-gold">
+            {inr(total)}
+          </span>
+        </div>
+      )}
     </section>
   );
 }

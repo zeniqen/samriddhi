@@ -3,7 +3,7 @@ import type { Lang } from "./types";
 
 const UI = {
   brand: { hi: "समृद्धि", pa: "ਸਮ੍ਰਿੱਧੀ" },
-  slipTitle: { hi: "बिक्री पर्ची", pa: "ਵਿਕਰੀ ਪਰਚੀ" },
+  slipTitle: { hi: "आपकी फसल", pa: "ਤੁਹਾਡੀ ਫ਼ਸਲ" },
   speakHint: { hi: "बोलिए", pa: "ਬੋਲੋ" },
   title: { hi: "अपनी फसल बेचें", pa: "ਆਪਣੀ ਫ਼ਸਲ ਵੇਚੋ" },
   tapToSpeak: { hi: "बोलने के लिए दबाएँ", pa: "ਬੋਲਣ ਲਈ ਦਬਾਓ" },

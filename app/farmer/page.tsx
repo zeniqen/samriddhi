@@ -268,15 +268,17 @@ export default function FarmerPage() {
 
   return (
     <main
-      className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-4 pb-52 pt-5"
+      className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pb-56 pt-6"
       onPointerDown={() => (interactedRef.current = true)}
     >
-      <header className="flex items-center justify-between">
+      <header className="flex items-center justify-between gap-4">
         <div>
-          <p className="font-ledger text-3xl leading-none text-forest">{ui("brand", lang)}</p>
-          <h1 className="mt-1 text-lg font-semibold text-forest">{ui("title", lang)}</h1>
+          <p className="font-display text-[1.75rem] font-bold leading-none tracking-tight text-forest">
+            {ui("brand", lang)}
+          </p>
+          <h1 className="mt-1.5 text-base text-soil">{ui("title", lang)}</h1>
         </div>
-        <div className="flex border-2 border-forest text-base font-semibold" role="group" aria-label="भाषा / ਭਾਸ਼ਾ">
+        <div className="raised flex rounded-full p-1 text-base font-semibold" role="group" aria-label="भाषा / ਭਾਸ਼ਾ">
           {(["hi", "pa"] as const).map((l) => (
             <button
               key={l}
@@ -284,7 +286,9 @@ export default function FarmerPage() {
               onClick={() => switchLang(l)}
               aria-pressed={lang === l}
               lang={l}
-              className={`min-h-11 px-3 ${lang === l ? "bg-forest text-paper" : "text-forest"}`}
+              className={`min-h-11 rounded-full px-4 transition-colors ${
+                lang === l ? "bg-forest text-surface" : "text-forest hover:bg-sage-soft"
+              }`}
             >
               {l === "hi" ? "हिंदी" : "ਪੰਜਾਬੀ"}
             </button>
@@ -294,15 +298,17 @@ export default function FarmerPage() {
 
       {listedId ? (
         <section className="flex flex-col gap-4">
-          <p className="flex items-center gap-3 bg-sage-soft px-4 py-3 text-xl font-semibold text-forest">
-            <Check aria-hidden className="h-7 w-7 shrink-0" strokeWidth={3} />
+          <p className="flex items-center gap-3 rounded-2xl bg-sage-soft px-4 py-3.5 text-lg font-semibold text-forest">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-forest text-surface">
+              <Check aria-hidden className="h-5 w-5" strokeWidth={3} />
+            </span>
             {ui("listed", lang)}
           </p>
           <ListingCard fields={fields} lang={lang} />
           <button
             type="button"
             onClick={startOver}
-            className="flex min-h-12 items-center justify-center gap-2 border-2 border-forest bg-paper text-lg font-semibold text-forest"
+            className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-forest/25 bg-surface text-lg font-semibold text-forest transition-colors hover:bg-sage-soft"
           >
             <Plus aria-hidden className="h-5 w-5" strokeWidth={2.5} />
             {ui("newListing", lang)}
@@ -311,18 +317,18 @@ export default function FarmerPage() {
       ) : (
         <>
           {isEmpty && !reply && !micBlocked && (
-            <section className="flex items-start gap-3" aria-label={ui("exampleTitle", lang)}>
+            <section className="flex items-center gap-4 rounded-2xl bg-sage-soft/70 p-4" aria-label={ui("exampleTitle", lang)}>
               <button
                 type="button"
                 onClick={() => speak(ui("example", lang))}
                 disabled={busy}
                 aria-label={`${ui("exampleTitle", lang)}: ${ui("listen", lang)}`}
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-forest bg-paper text-forest disabled:opacity-60"
+                className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-forest text-surface transition-transform active:scale-95 disabled:opacity-60"
               >
                 <Volume2 aria-hidden className="h-5 w-5" strokeWidth={2.25} />
               </button>
-              <p className="text-lg leading-snug text-soil">
-                <span className="block text-base text-soil-soft">{ui("exampleTitle", lang)}</span>“{ui("example", lang)}”
+              <p className="text-lg leading-snug text-forest">
+                <span className="block text-sm font-medium text-soil">{ui("exampleTitle", lang)}</span>“{ui("example", lang)}”
               </p>
             </section>
           )}
@@ -343,7 +349,7 @@ export default function FarmerPage() {
                 onClick={() => speak(reply)}
                 disabled={busy}
                 aria-label={ui("replay", lang)}
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-terracotta bg-paper text-terracotta-text disabled:opacity-60"
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface text-forest shadow-[0_0_0_1px_var(--line)] transition-transform active:scale-95 disabled:opacity-60"
               >
                 <Volume2 aria-hidden className="h-5 w-5" strokeWidth={2.25} />
               </button>
@@ -352,14 +358,17 @@ export default function FarmerPage() {
           )}
 
           {micBlocked && (
-            <section className="ledger flex flex-col gap-3 rounded-sm py-4 pl-12 pr-4" role="alert">
-              <p className="font-ledger text-xl text-forest">{ui("micGuideTitle", lang)}</p>
-              <div className="flex items-center gap-3 text-soil" aria-hidden>
-                <Lock className="h-8 w-8" strokeWidth={2} />
-                <span className="text-2xl text-soil-soft">›</span>
-                <Mic className="h-8 w-8" strokeWidth={2} />
-                <span className="text-2xl text-soil-soft">›</span>
-                <Check className="h-8 w-8 text-forest" strokeWidth={2.5} />
+            <section className="raised flex flex-col gap-4 rounded-3xl p-5" role="alert">
+              <p className="font-display text-xl font-semibold text-terracotta-text">{ui("micGuideTitle", lang)}</p>
+              <div className="flex items-center gap-3 text-forest" aria-hidden>
+                {[Lock, Mic, Check].map((I, idx) => (
+                  <span key={idx} className="flex items-center gap-3">
+                    {idx > 0 && <span className="h-px w-6 bg-line" />}
+                    <span className="grid h-12 w-12 place-items-center rounded-full bg-sage-soft">
+                      <I className="h-6 w-6" strokeWidth={2.25} />
+                    </span>
+                  </span>
+                ))}
               </div>
               <p className="text-lg leading-snug text-soil">{ui("micGuide", lang)}</p>
             </section>
@@ -367,7 +376,7 @@ export default function FarmerPage() {
 
           {showKeyboard && (
             <form
-              className="flex gap-2"
+              className="raised flex gap-2 rounded-full p-1.5"
               onSubmit={(e) => {
                 e.preventDefault();
                 if (typed.trim()) sendTurn({ text: typed.trim() });
@@ -379,10 +388,10 @@ export default function FarmerPage() {
                 onChange={(e) => setTyped(e.target.value)}
                 placeholder={ui("placeholder", lang)}
                 aria-label={ui("type", lang)}
-                className="min-w-0 flex-1 border-2 border-forest bg-paper px-3 py-3"
+                className="min-w-0 flex-1 rounded-full bg-transparent px-4 text-forest outline-none placeholder:text-soil-soft"
                 style={{ fontSize: 18 }}
               />
-              <button type="submit" className="min-h-12 bg-forest px-4 text-lg font-semibold text-paper">
+              <button type="submit" className="min-h-11 rounded-full bg-forest px-5 text-base font-semibold text-surface">
                 {ui("send", lang)}
               </button>
             </form>
@@ -390,34 +399,34 @@ export default function FarmerPage() {
         </>
       )}
 
-      <section className="mt-3 flex flex-col gap-3" aria-label={ui("orders", lang)}>
-        <h2 className="font-ledger text-2xl text-forest">{ui("orders", lang)}</h2>
+      <section className="mt-2 flex flex-col gap-3" aria-label={ui("orders", lang)}>
+        <h2 className="font-display text-xl font-semibold text-forest">{ui("orders", lang)}</h2>
         {notifications.length === 0 && <p className="text-soil-soft">{ui("noOrders", lang)}</p>}
         {notifications.map((n) => (
-          <article key={n.id} className="ledger flex flex-col gap-3 rounded-sm py-4 pl-12 pr-4">
+          <article key={n.id} className="raised flex flex-col gap-3 rounded-2xl p-4">
             <div className="flex items-start justify-between gap-3">
-              {n.farmerTotal !== undefined && (
+              {n.farmerTotal !== undefined ? (
                 <p>
-                  <span className="block text-base text-soil-soft">{ui("youGet", lang)}</span>
-                  <span className="double-rule inline-block pb-0.5 text-[2rem] font-bold leading-tight text-forest tabular-nums">
-                    {inr(n.farmerTotal)}
-                  </span>
+                  <span className="block text-sm font-medium text-soil-soft">{ui("youGet", lang)}</span>
+                  <span className="figure text-[2rem] font-semibold leading-tight text-forest">{inr(n.farmerTotal)}</span>
                 </p>
+              ) : (
+                <span />
               )}
               {!n.heard && n.facts && (
-                <span className="flex items-center gap-1 text-base font-semibold text-terracotta-text">
-                  <BellRing aria-hidden className="h-5 w-5" strokeWidth={2.25} />
+                <span className="flex items-center gap-1.5 rounded-full bg-terracotta/12 px-3 py-1 text-sm font-semibold text-terracotta-text">
+                  <BellRing aria-hidden className="h-4 w-4" strokeWidth={2.25} />
                   {ui("newOrder", lang)}
                 </span>
               )}
             </div>
-            <p className="text-lg leading-snug text-soil">{orderText(n)}</p>
+            <p className="text-base leading-snug text-soil">{orderText(n)}</p>
             <button
               type="button"
               onClick={() => listen(n)}
               disabled={busy}
               aria-label={`${ui("listen", lang)}: ${n.farmerTotal !== undefined ? inr(n.farmerTotal) : orderText(n).slice(0, 40)}`}
-              className="flex min-h-12 items-center justify-center gap-2 bg-forest text-lg font-semibold text-paper disabled:opacity-60"
+              className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-sage-soft text-base font-semibold text-forest transition-colors hover:bg-sage/40 disabled:opacity-60"
             >
               <Volume2 aria-hidden className="h-5 w-5" strokeWidth={2.25} />
               {ui("listen", lang)}
@@ -428,21 +437,21 @@ export default function FarmerPage() {
 
       {/* Fixed in thumb reach: the one action that matters right now. */}
       {!listedId && (
-        <div className="fixed inset-x-0 bottom-0 z-10 border-t-2 border-terracotta bg-page/95 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-10 rounded-t-[2rem] bg-surface/95 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-1px_0_var(--line),0_-16px_40px_-24px_rgb(35_71_53/0.4)] backdrop-blur">
           <div className="mx-auto flex max-w-md flex-col items-center gap-2 px-4">
             {complete ? (
               <>
                 {busy && (
-                  <p className="text-base font-semibold text-forest" aria-live="polite">
+                  <p className="text-sm font-medium text-soil" aria-live="polite">
                     {micLabel}
                   </p>
                 )}
-                <div className="grid w-full grid-cols-[1.5fr_1fr] gap-6">
+                <div className="grid w-full grid-cols-[1.5fr_1fr] gap-4">
                   <button
                     type="button"
                     onClick={confirmNow}
                     disabled={mic === "thinking" || mic === "recording"}
-                    className="flex min-h-14 items-center justify-center gap-2 bg-forest text-xl font-bold text-paper disabled:opacity-60"
+                    className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-forest text-lg font-bold text-surface shadow-[0_10px_24px_-10px_rgb(35_71_53/0.7)] transition-transform active:scale-[0.98] disabled:opacity-60"
                   >
                     <Check aria-hidden className="h-6 w-6" strokeWidth={3} />
                     {ui("confirm", lang)}
@@ -451,7 +460,7 @@ export default function FarmerPage() {
                     type="button"
                     onClick={redoAll}
                     disabled={mic === "thinking"}
-                    className="flex min-h-14 items-center justify-center gap-2 border-2 border-forest bg-paper text-lg font-semibold text-forest disabled:opacity-60"
+                    className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-forest/25 text-base font-semibold text-forest transition-colors hover:bg-sage-soft disabled:opacity-60"
                   >
                     <RotateCcw aria-hidden className="h-5 w-5" strokeWidth={2.5} />
                     {ui("retryAll", lang)}
@@ -461,82 +470,87 @@ export default function FarmerPage() {
             ) : (
               <>
                 <MicButton state={mic} onPress={toggleRecording} label={micLabel} />
-                {unheard.length > 0 && (
+                <div className="flex items-center gap-2">
+                  {unheard.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setMomentId(unheard[0].id)}
+                      className="flex min-h-11 items-center gap-2 rounded-full bg-terracotta-text px-4 text-base font-semibold text-surface"
+                    >
+                      <BellRing aria-hidden className="h-5 w-5" strokeWidth={2.25} />
+                      {unheard.length} {ui("newOrders", lang)}
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => setMomentId(unheard[0].id)}
-                    className="flex min-h-11 items-center gap-2 bg-terracotta-text px-4 text-base font-semibold text-paper"
+                    onClick={() => setShowKeyboard((s) => !s)}
+                    aria-pressed={showKeyboard}
+                    className={`flex min-h-11 items-center gap-2 rounded-full px-4 text-base font-medium transition-colors ${
+                      showKeyboard ? "bg-sage-soft text-forest" : "text-soil hover:bg-sage-soft"
+                    }`}
                   >
-                    <BellRing aria-hidden className="h-5 w-5" strokeWidth={2.25} />
-                    {unheard.length} {ui("newOrders", lang)}
+                    <Keyboard aria-hidden className="h-5 w-5" strokeWidth={2} />
+                    {ui("type", lang)}
                   </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowKeyboard((s) => !s)}
-                  aria-pressed={showKeyboard}
-                  className="flex min-h-11 items-center gap-2 px-3 text-base text-soil-soft underline underline-offset-4"
-                >
-                  <Keyboard aria-hidden className="h-5 w-5" strokeWidth={2} />
-                  {ui("type", lang)}
-                </button>
+                </div>
               </>
             )}
           </div>
         </div>
       )}
+
+      {/* A sale takes over the screen: forest field, the amount in gold. */}
       {moment?.facts && (
         <div
           role="dialog"
           aria-modal="true"
           aria-label={ui("youGet", lang)}
-          className="fixed inset-0 z-30 flex flex-col justify-center bg-page px-4"
+          className="fixed inset-0 z-30 flex flex-col justify-between bg-forest px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-10 text-surface"
         >
-          <div className="ledger mx-auto flex w-full max-w-md flex-col gap-4 rounded-sm py-8 pl-14 pr-6">
-            <p className="flex items-center gap-2 text-lg font-semibold text-terracotta-text">
-              <BellRing aria-hidden className="h-6 w-6" strokeWidth={2.25} />
+          <div className="mx-auto flex w-full max-w-md flex-col gap-8">
+            <p className="flex w-fit items-center gap-2 rounded-full bg-surface/10 px-3 py-1.5 text-base font-semibold text-sage-soft">
+              <BellRing aria-hidden className="h-5 w-5" strokeWidth={2.25} />
               {ui("newOrder", lang)}
             </p>
-            <p className="text-2xl font-bold text-forest">
-              {moment.facts.kg} {ui("kg", lang)} {cropName(moment.facts.crop, lang)}
-            </p>
             <div>
-              <p className="text-lg text-soil-soft">{ui("youGet", lang)}</p>
-              <p className="double-rule inline-block pb-1 text-6xl font-bold leading-none text-forest tabular-nums">
+              <p className="text-xl text-sage-soft">{ui("youGet", lang)}</p>
+              <p className="settle figure mt-1 text-[clamp(4rem,22vw,6rem)] font-semibold leading-none text-gold">
                 {inr(moment.facts.total)}
               </p>
             </div>
-            <p className="text-lg text-soil">
-              <span className="text-soil-soft">{ui("boughtBy", lang)}: </span>
-              {buyerInScript(moment.facts.buyerId, moment.facts.buyerName, lang)}
-            </p>
-            <p className="text-lg text-soil">
-              <span className="text-soil-soft">{ui("pickup", lang)}: </span>
-              {formatDate(moment.facts.pickupDate, lang)}
-            </p>
-            <div className="mt-2 grid grid-cols-[1fr_1.4fr] gap-4">
-              <button
-                type="button"
-                autoFocus
-                onClick={playMoment}
-                disabled={busy}
-                className={`flex min-h-14 items-center justify-center gap-2 text-lg font-semibold disabled:opacity-60 ${
-                  momentHeard ? "border-2 border-forest bg-paper text-forest" : "bg-forest text-paper"
-                }`}
-              >
-                <Volume2 aria-hidden className="h-6 w-6" strokeWidth={2.25} />
-                {ui("listen", lang)}
-              </button>
-              <button
-                type="button"
-                onClick={closeMoment}
-                disabled={!momentHeard || busy}
-                className="flex min-h-14 items-center justify-center gap-2 bg-forest text-xl font-bold text-paper disabled:opacity-40"
-              >
-                <Check aria-hidden className="h-6 w-6" strokeWidth={3} />
-                {ui("ok", lang)}
-              </button>
-            </div>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 border-t border-surface/15 pt-6 text-lg">
+              <dt className="text-sage-soft">{ui("crop", lang)}</dt>
+              <dd className="font-semibold">
+                {moment.facts.kg} {ui("kg", lang)} {cropName(moment.facts.crop, lang)}
+              </dd>
+              <dt className="text-sage-soft">{ui("boughtBy", lang)}</dt>
+              <dd className="font-semibold">{buyerInScript(moment.facts.buyerId, moment.facts.buyerName, lang)}</dd>
+              <dt className="text-sage-soft">{ui("pickup", lang)}</dt>
+              <dd className="font-semibold">{formatDate(moment.facts.pickupDate, lang)}</dd>
+            </dl>
+          </div>
+          <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-3">
+            <button
+              type="button"
+              autoFocus
+              onClick={playMoment}
+              disabled={busy}
+              className={`flex min-h-14 items-center justify-center gap-2 rounded-full text-lg font-semibold transition-colors disabled:opacity-60 ${
+                momentHeard ? "border border-surface/30 text-surface" : "bg-surface text-forest"
+              }`}
+            >
+              <Volume2 aria-hidden className="h-6 w-6" strokeWidth={2.25} />
+              {ui("listen", lang)}
+            </button>
+            <button
+              type="button"
+              onClick={closeMoment}
+              disabled={!momentHeard || busy}
+              className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-gold text-lg font-bold text-forest transition-opacity disabled:opacity-35"
+            >
+              <Check aria-hidden className="h-6 w-6" strokeWidth={3} />
+              {ui("ok", lang)}
+            </button>
           </div>
         </div>
       )}
