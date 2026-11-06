@@ -62,8 +62,15 @@ export async function playReply(text: string, lang: Lang): Promise<void> {
     await new Promise<void>((resolve) => {
       audio.onended = () => resolve();
       audio.onerror = () => resolve();
+      audio.onpause = () => resolve(); // stopReply() ends playback early
     });
   } catch {
     await speakWithBrowser(text, lang);
   }
+}
+
+/** Stop whatever is being spoken, so a tap on confirm doesn't have to wait for the read-back. */
+export function stopReply(): void {
+  current?.pause();
+  if (typeof window !== "undefined" && "speechSynthesis" in window) speechSynthesis.cancel();
 }

@@ -13,6 +13,10 @@ test("village and buyer names in the farmer's script", () => {
 
 test("read-back is fully in the chosen language", () => {
   expect(t("readBack", "pa", readBackVars(fields, "pa"))).toBe(
-    "100 ਕਿੱਲੋ ਟਮਾਟਰ, 16 ਰੁਪਏ ਕਿੱਲੋ, ਪਿੰਡ ਦਾਖਾ, ਪਿਕਅੱਪ 8 ਨਵੰਬਰ। ਠੀਕ ਹੈ?",
+    "100 ਕਿੱਲੋ ਟਮਾਟਰ, 16 ਰੁਪਏ ਕਿੱਲੋ, ਕੁੱਲ 1600 ਰੁਪਏ, ਪਿੰਡ ਦਾਖਾ, ਪਿਕਅੱਪ 8 ਨਵੰਬਰ। ਠੀਕ ਹੈ?",
   );
+});
+
+test("Hindi read-back states the total before asking to confirm", () => {
+  expect(t("readBack", "hi", readBackVars(fields, "hi"))).toContain("कुल 1600 रुपये");
 });

@@ -4,7 +4,7 @@ import { BellRing, Check, Keyboard, Lock, Mic, Plus, RotateCcw, Volume2 } from "
 import { useCallback, useEffect, useRef, useState } from "react";
 import { inr, ListingCard } from "@/components/ListingCard";
 import { MicButton, type MicState } from "@/components/MicButton";
-import { playReply, startRecording } from "@/lib/audio-client";
+import { playReply, startRecording, stopReply } from "@/lib/audio-client";
 import { buyerInScript, readBackVars } from "@/lib/readback";
 import { cropName, formatDate, t, type TemplateKey } from "@/lib/templates";
 import { ui } from "@/lib/ui-copy";
@@ -56,6 +56,7 @@ export default function FarmerPage() {
   const interactedRef = useRef(false);
   const shownRef = useRef(new Set<string>());
   const [momentId, setMomentId] = useState<string | null>(null);
+  const [momentHeard, setMomentHeard] = useState(false);
 
   useEffect(() => {
     // One-time sync from browser-only sources after hydration (server render can't see them).
@@ -65,11 +66,14 @@ export default function FarmerPage() {
   }, []);
 
   /** Play text aloud without replacing the AI's line (order cards, examples, guides). */
+  const speakSeq = useRef(0);
   const speak = useCallback(
     async (text: string, inLang: Lang = lang) => {
+      const seq = ++speakSeq.current;
       setMic("speaking");
       await playReply(text, inLang);
-      setMic("idle");
+      // A newer action (e.g. confirm tapped mid-read-back) owns the state now; don't reset it to idle.
+      if (seq === speakSeq.current) setMic("idle");
     },
     [lang],
   );
@@ -224,12 +228,31 @@ export default function FarmerPage() {
     if (!next) return;
     shownRef.current.add(next.id);
     setMomentId(next.id);
-    if (interactedRef.current) void speak(orderText(next));
+    setMomentHeard(false);
+    if (interactedRef.current) void speak(orderText(next)).then(() => setMomentHeard(true));
   }, [unheard, momentId, mic, speak, orderText]);
+
+  const playMoment = async () => {
+    if (!moment) return;
+    await speak(orderText(moment));
+    setMomentHeard(true);
+  };
 
   const closeMoment = () => {
     if (moment) markHeard(moment);
     setMomentId(null);
+  };
+
+  /** Confirm and re-record stay live while the read-back plays: a tap stops the voice and acts. */
+  const confirmNow = () => {
+    speakSeq.current++; // the interrupted read-back must not flip the screen back to idle
+    stopReply();
+    void sendTurn({ confirm: true });
+  };
+  const redoAll = () => {
+    speakSeq.current++;
+    stopReply();
+    void toggleRecording();
   };
 
   const busy = mic === "thinking" || mic === "speaking";
@@ -260,6 +283,7 @@ export default function FarmerPage() {
               type="button"
               onClick={() => switchLang(l)}
               aria-pressed={lang === l}
+              lang={l}
               className={`min-h-11 px-3 ${lang === l ? "bg-ink text-paper" : "text-ink"}`}
             >
               {l === "hi" ? "हिंदी" : "ਪੰਜਾਬੀ"}
@@ -380,7 +404,7 @@ export default function FarmerPage() {
                   </span>
                 </p>
               )}
-              {!n.heard && (
+              {!n.heard && n.facts && (
                 <span className="flex items-center gap-1 text-base font-semibold text-bahi">
                   <BellRing aria-hidden className="h-5 w-5" strokeWidth={2.25} />
                   {ui("newOrder", lang)}
@@ -392,6 +416,7 @@ export default function FarmerPage() {
               type="button"
               onClick={() => listen(n)}
               disabled={busy}
+              aria-label={`${ui("listen", lang)}: ${n.farmerTotal !== undefined ? inr(n.farmerTotal) : orderText(n).slice(0, 40)}`}
               className="flex min-h-12 items-center justify-center gap-2 bg-ink text-lg font-semibold text-paper disabled:opacity-60"
             >
               <Volume2 aria-hidden className="h-5 w-5" strokeWidth={2.25} />
@@ -415,8 +440,8 @@ export default function FarmerPage() {
                 <div className="grid w-full grid-cols-[1.5fr_1fr] gap-6">
                   <button
                     type="button"
-                    onClick={() => sendTurn({ confirm: true })}
-                    disabled={mic !== "idle"}
+                    onClick={confirmNow}
+                    disabled={mic === "thinking" || mic === "recording"}
                     className="flex min-h-14 items-center justify-center gap-2 bg-field text-xl font-bold text-paper disabled:opacity-60"
                   >
                     <Check aria-hidden className="h-6 w-6" strokeWidth={3} />
@@ -424,12 +449,12 @@ export default function FarmerPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={toggleRecording}
-                    disabled={busy}
+                    onClick={redoAll}
+                    disabled={mic === "thinking"}
                     className="flex min-h-14 items-center justify-center gap-2 border-2 border-ink bg-paper text-lg font-semibold text-ink disabled:opacity-60"
                   >
                     <RotateCcw aria-hidden className="h-5 w-5" strokeWidth={2.5} />
-                    {ui("retry", lang)}
+                    {ui("retryAll", lang)}
                   </button>
                 </div>
               </>
@@ -492,18 +517,21 @@ export default function FarmerPage() {
             <div className="mt-2 grid grid-cols-[1fr_1.4fr] gap-4">
               <button
                 type="button"
-                onClick={() => speak(orderText(moment))}
+                autoFocus
+                onClick={playMoment}
                 disabled={busy}
-                className="flex min-h-14 items-center justify-center gap-2 border-2 border-ink bg-paper text-lg font-semibold text-ink disabled:opacity-60"
+                className={`flex min-h-14 items-center justify-center gap-2 text-lg font-semibold disabled:opacity-60 ${
+                  momentHeard ? "border-2 border-ink bg-paper text-ink" : "bg-ink text-paper"
+                }`}
               >
                 <Volume2 aria-hidden className="h-6 w-6" strokeWidth={2.25} />
                 {ui("listen", lang)}
               </button>
               <button
                 type="button"
-                autoFocus
                 onClick={closeMoment}
-                className="flex min-h-14 items-center justify-center gap-2 bg-field text-xl font-bold text-paper"
+                disabled={!momentHeard || busy}
+                className="flex min-h-14 items-center justify-center gap-2 bg-field text-xl font-bold text-paper disabled:opacity-40"
               >
                 <Check aria-hidden className="h-6 w-6" strokeWidth={3} />
                 {ui("ok", lang)}

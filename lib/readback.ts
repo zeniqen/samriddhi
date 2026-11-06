@@ -28,6 +28,7 @@ export function readBackVars(fields: ListingFields, lang: Lang) {
     kg: f.quantityKg,
     crop: cropName(f.crop, lang),
     price: f.askPricePerKg,
+    total: f.quantityKg * f.askPricePerKg, // spoken before confirming: the number the farmer actually cares about
     village: villageInScript(f.village, lang),
     date: formatDate(f.pickupDate, lang),
   };

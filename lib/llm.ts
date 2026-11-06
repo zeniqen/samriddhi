@@ -67,7 +67,7 @@ export function buildSystemPrompt(today: string, fields: ListingFields): string 
     "Put only what the farmer actually said in updates. Never invent or guess a number, place or date.",
     "replyEnglish: one short, warm, simple sentence in English. Ask for at most ONE missing field. No emojis.",
     "Write numbers as digits. Say dates as day and month name (e.g. 8 November), never as 2026-11-08.",
-    "When all five fields are known, replyEnglish must read them all back and ask 'Is this correct?'.",
+    "When all five fields are known, replyEnglish must read them all back, state the total (quantityKg × askPricePerKg rupees), and ask 'Is this correct?'.",
     "intent: 'confirm' only if the farmer says yes after a full read-back; 'correct' if they change a field; 'question' if they ask something; otherwise 'fill'.",
     'Output ONLY this JSON shape, no markdown: {"updates":{"crop":"tomato","quantityKg":100},"replyEnglish":"...","intent":"fill"}',
     "Use exactly these keys; leave out any field the farmer did not mention.",

@@ -111,10 +111,12 @@ export async function POST(req: Request) {
 
   if (complete) {
     const f = state.fields as Required<ConversationState["fields"]>;
-    const allowed = allowedNumbers({ quantityKg: f.quantityKg, pricePerKg: f.askPricePerKg, pickupDate: f.pickupDate });
-    // A read-back must state kg, price, pickup day and the village; otherwise use the fixed sentence.
+    const total = f.quantityKg * f.askPricePerKg;
+    const allowed = allowedNumbers({ quantityKg: f.quantityKg, pricePerKg: f.askPricePerKg, total, pickupDate: f.pickupDate });
+    // A read-back must state kg, price, the total, pickup day and the village; otherwise use the fixed sentence.
     const day = Number(f.pickupDate.slice(8));
-    const statesAll = mentionsAll(r.replyEnglish, [f.quantityKg, f.askPricePerKg, day]) && r.replyEnglish.includes(f.village);
+    const statesAll =
+      mentionsAll(r.replyEnglish, [f.quantityKg, f.askPricePerKg, total, day]) && r.replyEnglish.includes(f.village);
     const reply = statesAll ? r.replyEnglish : "";
     const loc = await localize(
       {

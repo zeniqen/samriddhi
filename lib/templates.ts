@@ -23,8 +23,8 @@ const COPY: Record<TemplateKey, Record<Lang, string>> = {
   askVillage: { hi: "आपका गाँव कौन सा है?", pa: "ਤੁਹਾਡਾ ਪਿੰਡ ਕਿਹੜਾ ਹੈ?" },
   askPickupDate: { hi: "माल कब उठाना है?", pa: "ਮਾਲ ਕਦੋਂ ਚੁੱਕਣਾ ਹੈ?" },
   readBack: {
-    hi: "{kg} किलो {crop}, {price} रुपये किलो, गाँव {village}, पिकअप {date}। सही है?",
-    pa: "{kg} ਕਿੱਲੋ {crop}, {price} ਰੁਪਏ ਕਿੱਲੋ, ਪਿੰਡ {village}, ਪਿਕਅੱਪ {date}। ਠੀਕ ਹੈ?",
+    hi: "{kg} किलो {crop}, {price} रुपये किलो, कुल {total} रुपये, गाँव {village}, पिकअप {date}। सही है?",
+    pa: "{kg} ਕਿੱਲੋ {crop}, {price} ਰੁਪਏ ਕਿੱਲੋ, ਕੁੱਲ {total} ਰੁਪਏ, ਪਿੰਡ {village}, ਪਿਕਅੱਪ {date}। ਠੀਕ ਹੈ?",
   },
   listingLive: { hi: "आपकी फसल अब खरीदारों को दिख रही है।", pa: "ਤੁਹਾਡੀ ਫ਼ਸਲ ਹੁਣ ਖਰੀਦਦਾਰਾਂ ਨੂੰ ਦਿਖ ਰਹੀ ਹੈ।" },
   orderConfirmed: {
