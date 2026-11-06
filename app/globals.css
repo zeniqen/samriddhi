@@ -1,36 +1,34 @@
 @import "tailwindcss";
 
+/* Samriddhi — the trader's ledger (bahi-khata): ruled pages, red margins, ink-blue figures. */
 :root {
-  --bg: #fbf7ef;
-  --card: #ffffff;
-  --ink: #1f2a1f;
-  --muted: #6b6b5e;
-  --line: #e7e0d2;
-  --leaf: #2f6b3a;
-  --leaf-soft: #e3efe2;
-  --tomato: #d2452e;
-  --tomato-soft: #fbe3dd;
-  --turmeric: #e9a23b;
-  --turmeric-soft: #fcefd7;
+  --page: #fbf4d9; /* ledger paper, mustard-tinted */
+  --paper: #fffcf0; /* a slip laid on the page */
+  --ink: #1c2b6b; /* fountain-pen ledger ink */
+  --ink-soft: #4a5687;
+  --bahi: #a3241c; /* the red of the ledger's cloth and rulings */
+  --rule: rgb(163 36 28 / 0.22);
+  --sarson: #e5a800; /* mustard flower: the farmer's one action */
+  --field: #1d6b3a; /* money that reaches the farmer */
+  --field-soft: #e2efdf;
 }
 
 @theme inline {
-  --color-bg: var(--bg);
-  --color-card: var(--card);
+  --color-page: var(--page);
+  --color-paper: var(--paper);
   --color-ink: var(--ink);
-  --color-muted: var(--muted);
-  --color-line: var(--line);
-  --color-leaf: var(--leaf);
-  --color-leaf-soft: var(--leaf-soft);
-  --color-tomato: var(--tomato);
-  --color-tomato-soft: var(--tomato-soft);
-  --color-turmeric: var(--turmeric);
-  --color-turmeric-soft: var(--turmeric-soft);
+  --color-ink-soft: var(--ink-soft);
+  --color-bahi: var(--bahi);
+  --color-rule: var(--rule);
+  --color-sarson: var(--sarson);
+  --color-field: var(--field);
+  --color-field-soft: var(--field-soft);
   --font-sans: var(--font-mukta), var(--font-gurmukhi), system-ui, sans-serif;
+  --font-ledger: var(--font-tiro), var(--font-tiro-pa), Georgia, serif;
 }
 
 body {
-  background: var(--bg);
+  background: var(--page);
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
@@ -42,9 +40,33 @@ button {
   -webkit-user-select: none;
 }
 
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* A ruled slip: faint red lines and a double red margin, like a page of the bahi. */
+.ledger {
+  background-color: var(--paper);
+  background-image: linear-gradient(to right, transparent 2.25rem, var(--bahi) 2.25rem, var(--bahi) calc(2.25rem + 1px), transparent calc(2.25rem + 1px), transparent calc(2.25rem + 4px), var(--bahi) calc(2.25rem + 4px), var(--bahi) calc(2.25rem + 5px), transparent calc(2.25rem + 5px));
+  box-shadow: 0 1px 0 var(--rule), 0 10px 24px -18px rgb(28 43 107 / 0.45);
+}
+
+/* Total sits on a double underline, the accountant's way of closing a sum. */
+.double-rule {
+  border-bottom: 3px double var(--bahi);
+}
+
+/* A slip line inks in when its value is heard. */
+@keyframes ink-in {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+.ink-in { animation: ink-in 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
 @keyframes ring {
-  0% { transform: scale(1); opacity: 0.55; }
-  100% { transform: scale(1.6); opacity: 0; }
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.55); opacity: 0; }
 }
 .mic-ring::before,
 .mic-ring::after {
@@ -52,12 +74,13 @@ button {
   position: absolute;
   inset: 0;
   border-radius: 9999px;
-  background: var(--tomato);
+  background: var(--bahi);
   animation: ring 1.4s ease-out infinite;
   z-index: -1;
 }
 .mic-ring::after { animation-delay: 0.7s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .mic-ring::before, .mic-ring::after { animation: none; opacity: 0.25; }
+  .ink-in { animation: none; }
+  .mic-ring::before, .mic-ring::after { animation: none; opacity: 0.2; }
 }

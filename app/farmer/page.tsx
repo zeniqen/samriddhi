@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ListingCard } from "@/components/ListingCard";
 import { MicButton, type MicState } from "@/components/MicButton";
 import { playReply, startRecording } from "@/lib/audio-client";
+import { todayIST } from "@/lib/dates";
 import { t, type TemplateKey } from "@/lib/templates";
 import { ui } from "@/lib/ui-copy";
 import type { Lang, ListingFields, Notification } from "@/lib/types";
@@ -28,7 +29,7 @@ const newSessionId = () => `s_${Date.now().toString(36)}_${Math.random().toStrin
 
 function readLang(): Lang {
   try {
-    return localStorage.getItem("kisan-lang") === "pa" ? "pa" : "hi";
+    return localStorage.getItem("samriddhi-lang") === "pa" ? "pa" : "hi";
   } catch {
     return "hi";
   }
@@ -37,6 +38,7 @@ function readLang(): Lang {
 export default function FarmerPage() {
   const [lang, setLang] = useState<Lang>("hi");
   const [farmerId, setFarmerId] = useState("f1");
+  const [today, setToday] = useState<string>();
   // Created on first use, not during prerender (Date.now/random are request-time values).
   const sessionRef = useRef<string | null>(null);
   const [fields, setFields] = useState<ListingFields>({});
@@ -56,12 +58,13 @@ export default function FarmerPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLang(readLang());
     setFarmerId(new URLSearchParams(window.location.search).get("farmer") ?? "f1");
+    setToday(todayIST());
   }, []);
 
   const switchLang = (l: Lang) => {
     setLang(l);
     try {
-      localStorage.setItem("kisan-lang", l);
+      localStorage.setItem("samriddhi-lang", l);
     } catch {}
   };
 
@@ -172,17 +175,20 @@ export default function FarmerPage() {
     mic === "recording" ? ui("recording", lang) : mic === "thinking" ? ui("thinking", lang) : ui("tapToSpeak", lang);
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-4 pb-10 pt-5">
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-4 pb-48 pt-5">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold text-leaf">{ui("title", lang)}</h1>
-        <div className="flex rounded-full border border-line bg-card p-1 text-base font-semibold" role="group">
+        <div>
+          <p className="font-ledger text-3xl leading-none text-bahi">{ui("brand", lang)}</p>
+          <h1 className="mt-1 text-lg font-semibold text-ink">{ui("title", lang)}</h1>
+        </div>
+        <div className="flex border-2 border-ink text-base font-semibold" role="group" aria-label="भाषा / ਭਾਸ਼ਾ">
           {(["hi", "pa"] as const).map((l) => (
             <button
               key={l}
               type="button"
               onClick={() => switchLang(l)}
               aria-pressed={lang === l}
-              className={`rounded-full px-3 py-1.5 ${lang === l ? "bg-leaf text-white" : "text-muted"}`}
+              className={`px-3 py-1.5 ${lang === l ? "bg-ink text-paper" : "text-ink"}`}
             >
               {l === "hi" ? "हिंदी" : "ਪੰਜਾਬੀ"}
             </button>
@@ -191,10 +197,16 @@ export default function FarmerPage() {
       </header>
 
       {listedId ? (
-        <section className="flex flex-col gap-3 rounded-3xl bg-leaf p-5 text-white">
-          <p className="text-2xl font-extrabold">{ui("listed", lang)}</p>
-          <ListingCard fields={fields} lang={lang} />
-          <button type="button" onClick={startOver} className="rounded-2xl bg-white/15 py-3 text-lg font-semibold">
+        <section className="flex flex-col gap-4">
+          <p className="border-l-4 border-field bg-field-soft px-4 py-3 text-xl font-semibold text-field">
+            {ui("listed", lang)}
+          </p>
+          <ListingCard fields={fields} lang={lang} today={today} />
+          <button
+            type="button"
+            onClick={startOver}
+            className="border-2 border-ink bg-paper py-3 text-lg font-semibold text-ink"
+          >
             ＋ {ui("newListing", lang)}
           </button>
         </section>
@@ -203,95 +215,103 @@ export default function FarmerPage() {
           <ListingCard
             fields={fields}
             lang={lang}
+            today={today}
             disabled={mic !== "idle"}
             onTapEmpty={Object.keys(fields).length > 0 || tapToFill ? askForField : undefined}
           />
-          {tapToFill && <p className="text-center font-semibold text-turmeric">{ui("tapField", lang)}</p>}
+          {tapToFill && <p className="font-semibold text-bahi">{ui("tapField", lang)}</p>}
 
           {reply && (
-            <p className="rounded-2xl bg-turmeric-soft px-4 py-3 text-lg leading-snug" aria-live="polite">
+            <p className="border-l-4 border-bahi pl-4 text-xl leading-snug text-ink" aria-live="polite">
               {reply}
             </p>
           )}
 
-          {complete ? (
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => sendTurn({ confirm: true })}
-                disabled={mic !== "idle"}
-                className="rounded-2xl bg-leaf py-4 text-xl font-extrabold text-white disabled:opacity-60"
-              >
-                ✅ {ui("confirm", lang)}
-              </button>
-              <button
-                type="button"
-                onClick={toggleRecording}
-                disabled={mic === "thinking" || mic === "speaking"}
-                className="rounded-2xl border-2 border-line bg-card py-4 text-xl font-semibold disabled:opacity-60"
-              >
-                🔁 {ui("retry", lang)}
-              </button>
-            </div>
-          ) : (
-            <MicButton state={mic} onPress={toggleRecording} label={micLabel} />
-          )}
+          {micError && <p className="font-semibold text-bahi">{ui("micDenied", lang)}</p>}
 
-          {micError && <p className="text-center font-semibold text-tomato">{ui("micDenied", lang)}</p>}
-
-          <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => setShowKeyboard((s) => !s)}
-              className="self-center rounded-full border border-line bg-card px-4 py-2 text-base text-muted"
+          {showKeyboard && (
+            <form
+              className="flex gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (typed.trim()) sendTurn({ text: typed.trim() });
+                setTyped("");
+              }}
             >
-              ⌨️ {ui("type", lang)}
-            </button>
-            {showKeyboard && (
-              <form
-                className="flex gap-2"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (typed.trim()) sendTurn({ text: typed.trim() });
-                  setTyped("");
-                }}
-              >
-                <input
-                  value={typed}
-                  onChange={(e) => setTyped(e.target.value)}
-                  placeholder={ui("placeholder", lang)}
-                  className="min-w-0 flex-1 rounded-2xl border border-line bg-card px-4 py-3 text-lg"
-                  style={{ fontSize: 18 }}
-                />
-                <button type="submit" className="rounded-2xl bg-leaf px-4 text-lg font-semibold text-white">
-                  {ui("send", lang)}
-                </button>
-              </form>
-            )}
-          </div>
+              <input
+                value={typed}
+                onChange={(e) => setTyped(e.target.value)}
+                placeholder={ui("placeholder", lang)}
+                aria-label={ui("type", lang)}
+                className="min-w-0 flex-1 border-2 border-ink bg-paper px-3 py-3"
+                style={{ fontSize: 18 }}
+              />
+              <button type="submit" className="bg-ink px-4 text-lg font-semibold text-paper">
+                {ui("send", lang)}
+              </button>
+            </form>
+          )}
         </>
       )}
 
-      <section className="mt-2 flex flex-col gap-3">
-        <h2 className="text-lg font-extrabold">{ui("orders", lang)}</h2>
-        {notifications.length === 0 && <p className="text-muted">{ui("noOrders", lang)}</p>}
+      <section className="mt-3 flex flex-col gap-3" aria-label={ui("orders", lang)}>
+        <h2 className="font-ledger text-2xl text-bahi">{ui("orders", lang)}</h2>
+        {notifications.length === 0 && <p className="text-ink-soft">{ui("noOrders", lang)}</p>}
         {notifications.map((n) => (
           <article
             key={n.id}
-            className={`flex items-start gap-3 rounded-2xl border p-4 ${n.heard ? "border-line bg-card" : "border-leaf bg-leaf-soft"}`}
+            className={`ledger flex items-start gap-3 rounded-sm py-3 pl-12 pr-3 ${n.heard ? "" : "outline-2 outline-field"}`}
           >
             <p className="flex-1 text-lg leading-snug">{n.textLocal}</p>
             <button
               type="button"
               onClick={() => listen(n)}
               disabled={mic !== "idle"}
-              className="shrink-0 rounded-xl bg-leaf px-3 py-2 text-base font-semibold text-white disabled:opacity-60"
+              className="shrink-0 border-2 border-ink bg-paper px-3 py-2 text-base font-semibold disabled:opacity-60"
             >
               🔊 {ui("listen", lang)}
             </button>
           </article>
         ))}
       </section>
+
+      {/* Fixed in thumb reach: the one action that matters right now. */}
+      {!listedId && (
+        <div className="fixed inset-x-0 bottom-0 z-10 border-t-2 border-bahi bg-page/95 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur">
+          <div className="mx-auto flex max-w-md flex-col items-center gap-3 px-4">
+            {complete ? (
+              <div className="grid w-full grid-cols-[1.4fr_1fr] gap-3">
+                <button
+                  type="button"
+                  onClick={() => sendTurn({ confirm: true })}
+                  disabled={mic !== "idle"}
+                  className="bg-field py-4 text-xl font-bold text-paper disabled:opacity-60"
+                >
+                  ✅ {ui("confirm", lang)}
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleRecording}
+                  disabled={mic === "thinking" || mic === "speaking"}
+                  className="border-2 border-ink bg-paper py-4 text-xl font-semibold text-ink disabled:opacity-60"
+                >
+                  🔁 {ui("retry", lang)}
+                </button>
+              </div>
+            ) : (
+              <MicButton state={mic} onPress={toggleRecording} label={micLabel} />
+            )}
+            <button
+              type="button"
+              onClick={() => setShowKeyboard((s) => !s)}
+              aria-pressed={showKeyboard}
+              className="text-base text-ink-soft underline underline-offset-4"
+            >
+              ⌨️ {ui("type", lang)}
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

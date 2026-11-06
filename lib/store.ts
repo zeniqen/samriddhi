@@ -121,16 +121,16 @@ function createRedisStore(redis: Redis): Store {
   };
 }
 
-const g = globalThis as unknown as { __kisanStore?: Store };
+const g = globalThis as unknown as { __samriddhiStore?: Store };
 
 export function getStore(): Store {
-  if (g.__kisanStore) return g.__kisanStore;
+  if (g.__samriddhiStore) return g.__samriddhiStore;
   const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
   if (!(url && token) && process.env.VERCEL) {
     // Serverless instances don't share memory: conversations and orders would vanish between requests.
     console.error("[store] UPSTASH_REDIS_REST_URL/TOKEN missing on Vercel — using per-instance memory. Connect Upstash.");
   }
-  g.__kisanStore = url && token ? createRedisStore(new Redis({ url, token })) : createMemoryStore();
-  return g.__kisanStore;
+  g.__samriddhiStore = url && token ? createRedisStore(new Redis({ url, token })) : createMemoryStore();
+  return g.__samriddhiStore;
 }

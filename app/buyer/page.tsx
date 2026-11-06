@@ -1,16 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { PriceSplit } from "@/components/PriceSplit";
+import { PriceSplit, rupees } from "@/components/PriceSplit";
 import { orderTotals } from "@/lib/pricing";
 import type { Buyer, Listing, PriceSplit as Split } from "@/lib/types";
 
 type Row = Listing & { split: Split; farmerName: string };
 
-const CROP_EMOJI = { tomato: "🍅", onion: "🧅", potato: "🥔" } as const;
 const fmtDate = (iso: string) =>
   new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
 const inr = (n: number) => `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+const title = (s: string) => s[0].toUpperCase() + s.slice(1);
 
 export default function BuyerPage() {
   const [listings, setListings] = useState<Row[]>([]);
@@ -58,127 +58,151 @@ export default function BuyerPage() {
         body: JSON.stringify({ listingId: selected.id, buyerId, quantityKg: qty }),
       });
       const data = await res.json();
-      if (!res.ok) setStatus({ kind: "error", text: data.error ?? "Order failed" });
+      if (!res.ok) setStatus({ kind: "error", text: `${data.error ?? "Order not placed"}. Change the quantity and try again.` });
       else {
-        setStatus({ kind: "ok", text: `Order placed: ${qty} kg from ${selected.farmerName}. The farmer has been notified.` });
+        setStatus({ kind: "ok", text: `Order placed: ${qty} kg from ${selected.farmerName}. They will hear it on their phone.` });
         await load();
       }
     } catch {
-      setStatus({ kind: "error", text: "Network error, try again" });
+      setStatus({ kind: "error", text: "No connection. Check your internet and place the order again." });
     } finally {
       setPlacing(false);
     }
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-8 sm:px-8">
+      <header className="flex flex-wrap items-end justify-between gap-6 border-b-2 border-bahi pb-5">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-leaf">Kisan Awaaz · Buyer</p>
-          <h1 className="text-3xl font-extrabold">Fresh from Ludhiana farms</h1>
-          <p className="text-muted">Direct from farmers. Every rupee shown.</p>
+          <p className="font-ledger text-4xl leading-none text-bahi">Samriddhi</p>
+          <h1 className="mt-2 text-xl font-semibold text-ink">Tomatoes from Ludhiana farms, priced in the open</h1>
         </div>
-        <label className="flex flex-col text-sm font-semibold">
-          Ordering as
+        <label className="flex flex-col text-sm text-ink-soft">
+          Ordering for
           <select
             value={buyerId}
             onChange={(e) => setBuyerId(e.target.value)}
-            className="mt-1 rounded-xl border border-line bg-card px-3 py-2 text-base font-normal"
+            className="mt-1 border-2 border-ink bg-paper px-3 py-2 text-base text-ink"
           >
             {buyers.map((b) => (
               <option key={b.id} value={b.id}>
-                {b.name} ({b.type})
+                {b.name}
               </option>
             ))}
           </select>
         </label>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-        <section aria-label="Listings" className="grid content-start gap-3 sm:grid-cols-2">
-          {listings.length === 0 && <p className="text-muted">No produce listed right now.</p>}
-          {listings.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              onClick={() => open(l)}
-              className={`flex flex-col gap-2 rounded-2xl border bg-card p-4 text-left transition-shadow hover:shadow-md ${
-                selectedId === l.id ? "border-leaf ring-2 ring-leaf" : "border-line"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-lg font-extrabold capitalize">
-                  {CROP_EMOJI[l.crop]} {l.crop}
-                </span>
-                <span className="text-lg font-extrabold tabular-nums">{inr(l.split.buyerPerKg)}/kg</span>
-              </div>
-              <p className="text-sm text-muted">
-                {l.farmerName} · {l.village}
-              </p>
-              <div className="flex gap-2 text-sm">
-                <span className="rounded-full bg-leaf-soft px-2 py-0.5 font-semibold">{l.remainingKg} kg left</span>
-                <span className="rounded-full bg-turmeric-soft px-2 py-0.5">Pickup {fmtDate(l.pickupDate)}</span>
-                {l.status === "verified" && <span className="rounded-full bg-leaf px-2 py-0.5 text-white">✓ Verified</span>}
-              </div>
-            </button>
-          ))}
+      <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
+        <section aria-labelledby="board-title">
+          <h2 id="board-title" className="mb-3 font-ledger text-2xl text-bahi">
+            Today’s board
+          </h2>
+          {listings.length === 0 ? (
+            <p className="text-ink-soft">No produce listed right now. New listings appear here as farmers speak them.</p>
+          ) : (
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b-2 border-ink text-left text-sm text-ink-soft">
+                  <th className="py-2 font-normal">Farmer</th>
+                  <th className="hidden py-2 font-normal sm:table-cell">Crop</th>
+                  <th className="py-2 text-right font-normal">Kg left</th>
+                  <th className="hidden py-2 text-right font-normal sm:table-cell">Pickup</th>
+                  <th className="py-2 text-right font-normal">₹ per kg</th>
+                </tr>
+              </thead>
+              <tbody>
+                {listings.map((l) => {
+                  const isSelected = selectedId === l.id;
+                  return (
+                    <tr
+                      key={l.id}
+                      className={`border-b border-rule ${isSelected ? "bg-paper shadow-[inset_4px_0_0_var(--bahi)]" : "hover:bg-paper/60"}`}
+                    >
+                      <td className="py-3 pl-3">
+                        <button
+                          type="button"
+                          onClick={() => open(l)}
+                          aria-pressed={isSelected}
+                          className="text-left"
+                        >
+                          <span className="block font-semibold text-ink">{l.farmerName}</span>
+                          <span className="block text-sm text-ink-soft">
+                            {l.village}
+                            <span className="sm:hidden">, pickup {fmtDate(l.pickupDate)}</span>
+                          </span>
+                        </button>
+                      </td>
+                      <td className="hidden py-3 sm:table-cell">{title(l.crop)}</td>
+                      <td className="py-3 text-right tabular-nums">{l.remainingKg}</td>
+                      <td className="hidden py-3 text-right sm:table-cell">{fmtDate(l.pickupDate)}</td>
+                      <td className="py-3 pr-3 text-right font-ledger text-xl tabular-nums">{l.split.buyerPerKg.toFixed(2)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </section>
 
-        <aside className="rounded-3xl border border-line bg-card p-5 lg:sticky lg:top-6 lg:self-start">
+        <aside className="ledger self-start rounded-sm py-5 pl-14 pr-5 lg:sticky lg:top-6" aria-live="polite">
           {!selected ? (
-            <p className="text-muted">Select a listing to see where your money goes and place an order.</p>
+            <div className="flex flex-col gap-2">
+              <h2 className="font-ledger text-2xl text-bahi">Where the money goes</h2>
+              <p className="text-ink-soft">Choose a farmer on the board to see each rupee of the price, then place your order.</p>
+            </div>
           ) : (
             <div className="flex flex-col gap-5">
               <div>
-                <h2 className="text-xl font-extrabold">
-                  {CROP_EMOJI[selected.crop]} {selected.crop[0].toUpperCase() + selected.crop.slice(1)} from {selected.village}
-                </h2>
-                <p className="text-sm text-muted">
-                  {selected.farmerName} · {selected.remainingKg} kg left · pickup {fmtDate(selected.pickupDate)}
+                <h2 className="font-ledger text-2xl text-bahi">{selected.farmerName}</h2>
+                <p className="text-ink-soft">
+                  {title(selected.crop)} from {selected.village}, {selected.remainingKg} kg left, pickup{" "}
+                  {fmtDate(selected.pickupDate)}
                 </p>
               </div>
               <PriceSplit split={selected.split} />
               <form
-                className="flex flex-col gap-3"
+                className="flex flex-col gap-3 border-t-2 border-ink pt-4"
                 onSubmit={(e) => {
                   e.preventDefault();
                   placeOrder();
                 }}
               >
-                <label className="flex flex-col text-sm font-semibold">
-                  Quantity (kg)
+                <label className="flex items-center justify-between gap-3 font-semibold">
+                  Quantity in kg
                   <input
                     type="number"
                     min={1}
                     max={selected.remainingKg}
                     value={kg}
                     onChange={(e) => setKg(e.target.value)}
-                    className="mt-1 rounded-xl border border-line px-3 py-2 text-base"
+                    className="w-28 border-2 border-ink bg-page px-3 py-2 text-right text-lg tabular-nums"
                   />
                 </label>
                 {totals && (
-                  <dl className="grid grid-cols-2 gap-y-1 text-sm">
-                    <dt className="text-muted">You pay</dt>
-                    <dd className="text-right font-extrabold tabular-nums">{inr(totals.buyerTotal)}</dd>
-                    <dt className="text-muted">Farmer receives</dt>
-                    <dd className="text-right font-semibold text-leaf tabular-nums">{inr(totals.farmerTotal)}</dd>
+                  <dl className="grid grid-cols-[1fr_auto] gap-y-1">
+                    <dt className="text-ink-soft">You pay</dt>
+                    <dd className="text-right text-lg font-bold tabular-nums">{inr(totals.buyerTotal)}</dd>
+                    <dt className="text-ink-soft">{selected.farmerName} receives</dt>
+                    <dd className="text-right text-lg font-bold text-field tabular-nums">{inr(totals.farmerTotal)}</dd>
                   </dl>
                 )}
                 <button
                   type="submit"
                   disabled={placing || !(qty > 0)}
-                  className="rounded-2xl bg-leaf py-3 text-lg font-extrabold text-white disabled:opacity-50"
+                  className="bg-ink py-3 text-lg font-bold text-paper disabled:opacity-50"
                 >
-                  {placing ? "Placing…" : "Place order"}
+                  {placing ? "Placing order…" : `Place order${qty > 0 ? ` for ${qty} kg` : ""}`}
                 </button>
                 {status && (
                   <p
                     role="status"
-                    className={`rounded-xl px-3 py-2 text-sm ${status.kind === "ok" ? "bg-leaf-soft text-leaf" : "bg-tomato-soft text-tomato"}`}
+                    className={`border-l-4 px-3 py-2 ${status.kind === "ok" ? "border-field bg-field-soft text-field" : "border-bahi bg-paper text-bahi"}`}
                   >
                     {status.text}
                   </p>
                 )}
+                <p className="text-xs text-ink-soft">All figures are illustrative assumptions. Per kg: {rupees(selected.split.buyerPerKg)}.</p>
               </form>
             </div>
           )}

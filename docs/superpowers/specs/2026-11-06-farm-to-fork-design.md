@@ -1,8 +1,8 @@
-# Farm-to-Fork Voice Marketplace — Design Spec
+# Samriddhi — Farm-to-Fork Voice Marketplace Design Spec
 
 - **Date:** 2026-11-06
 - **Event:** Arthakram Rapid Prototyping Hackathon, Problem Statement 4 ("The Farm-to-Fork Gap")
-- **Working title:** Kisan Awaaz (placeholder — rename freely)
+- **Product name:** Samriddhi (समृद्धि)
 - **Team:** 3 members, 1 developer. Build with Claude (Claude Code); runtime AI via Ollama Cloud.
 - **Build budget:** plan for 10–14 h (deadline extended to "tomorrow"; exact cutoff unconfirmed).
 

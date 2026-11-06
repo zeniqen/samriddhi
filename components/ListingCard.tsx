@@ -1,72 +1,73 @@
+import { VILLAGE_NATIVE } from "@/lib/seed-data";
 import { cropName, formatDate } from "@/lib/templates";
 import { ui, type UiKey } from "@/lib/ui-copy";
-import type { Crop, Lang, ListingFields } from "@/lib/types";
+import type { Lang, ListingFields } from "@/lib/types";
 
-const CROP_EMOJI: Record<Crop, string> = { tomato: "🍅", onion: "🧅", potato: "🥔" };
-
-type Row = { field: keyof ListingFields; label: UiKey; icon: string; value: (f: ListingFields, lang: Lang) => string };
+type Row = { field: keyof ListingFields; label: UiKey; value: (f: ListingFields, lang: Lang) => string };
 
 const ROWS: Row[] = [
-  { field: "crop", label: "crop", icon: "🌱", value: (f, l) => cropName(f.crop!, l) },
-  { field: "quantityKg", label: "quantity", icon: "⚖️", value: (f, l) => `${f.quantityKg} ${ui("kg", l)}` },
-  { field: "askPricePerKg", label: "price", icon: "₹", value: (f, l) => `₹${f.askPricePerKg}${ui("perKg", l)}` },
-  { field: "village", label: "village", icon: "📍", value: (f) => f.village! },
-  { field: "pickupDate", label: "pickup", icon: "🚚", value: (f, l) => formatDate(f.pickupDate!, l) },
+  { field: "crop", label: "crop", value: (f, l) => cropName(f.crop!, l) },
+  { field: "quantityKg", label: "quantity", value: (f, l) => `${f.quantityKg} ${ui("kg", l)}` },
+  { field: "askPricePerKg", label: "price", value: (f, l) => `₹${f.askPricePerKg}${ui("perKg", l)}` },
+  { field: "village", label: "village", value: (f, l) => villageInScript(f.village!, l) },
+  { field: "pickupDate", label: "pickup", value: (f, l) => formatDate(f.pickupDate!, l) },
 ];
 
+/** Village in the farmer's own script: Dakha → दाखा / ਦਾਖਾ. */
+function villageInScript(village: string, lang: Lang): string {
+  const spellings = VILLAGE_NATIVE[village];
+  if (!spellings) return village;
+  return lang === "pa" ? spellings[spellings.length - 1] : spellings[0];
+}
+
+/** The farmer's sale slip (parchi): each line inks in as it is heard. */
 export function ListingCard({
   fields,
   lang,
   onTapEmpty,
   disabled,
+  today,
 }: {
   fields: ListingFields;
   lang: Lang;
+  /** YYYY-MM-DD; passed in because the date is only known in the browser, not at prerender. */
+  today?: string;
   onTapEmpty?: (field: keyof ListingFields) => void;
   disabled?: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-line bg-card p-4 shadow-[0_1px_0_var(--line)]">
-      <div className="mb-3 flex items-center gap-3">
-        <div className="grid h-14 w-14 place-items-center rounded-2xl bg-tomato-soft text-3xl" aria-hidden>
-          {fields.crop ? CROP_EMOJI[fields.crop] : "🧺"}
-        </div>
-        <div className="text-2xl font-extrabold leading-tight">
-          {fields.crop ? cropName(fields.crop, lang) : "—"}
-          {fields.quantityKg !== undefined && (
-            <span className="ml-2 font-semibold text-muted">
-              {fields.quantityKg} {ui("kg", lang)}
-            </span>
-          )}
-        </div>
-      </div>
-      <ul className="grid grid-cols-2 gap-2">
-        {ROWS.slice(1).map((row) => {
+    <section className="ledger rounded-sm pb-2 pt-3" aria-label={ui("slipTitle", lang)}>
+      <header className="flex items-baseline justify-between pb-2 pl-12 pr-4">
+        <h2 className="font-ledger text-xl text-bahi">{ui("slipTitle", lang)}</h2>
+        {today && <span className="text-sm text-ink-soft">{formatDate(today, lang)}</span>}
+      </header>
+      <dl>
+        {ROWS.map((row) => {
           const filled = fields[row.field] !== undefined;
+          const value = filled ? row.value(fields, lang) : "";
           return (
-            <li key={row.field}>
-              <button
-                type="button"
-                disabled={filled || disabled || !onTapEmpty}
-                onClick={() => onTapEmpty?.(row.field)}
-                className={`flex w-full items-center gap-2 rounded-2xl px-3 py-3 text-left transition-colors ${
-                  filled ? "bg-leaf-soft" : "border-2 border-dashed border-line bg-bg active:bg-turmeric-soft"
-                }`}
-              >
-                <span className="w-6 text-center text-lg" aria-hidden>
-                  {row.icon}
-                </span>
-                <span className="flex flex-col">
-                  <span className="text-xs text-muted">{ui(row.label, lang)}</span>
-                  <span className={`text-lg font-semibold ${filled ? "text-ink" : "text-muted"}`}>
-                    {filled ? row.value(fields, lang) : "❔"}
+            <div key={row.field} className="grid grid-cols-[5.5rem_1fr] items-baseline border-t border-rule pl-12 pr-4">
+              <dt className="py-3 text-base text-ink-soft">{ui(row.label, lang)}</dt>
+              <dd className="min-h-14 py-2">
+                {filled ? (
+                  <span key={value} className="ink-in inline-block text-[1.65rem] font-bold leading-tight text-ink">
+                    {value}
                   </span>
-                </span>
-              </button>
-            </li>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={disabled || !onTapEmpty}
+                    onClick={() => onTapEmpty?.(row.field)}
+                    className="w-full border-b-2 border-dashed border-rule py-1.5 text-left text-lg text-ink-soft/70 enabled:active:bg-sarson/20"
+                  >
+                    {onTapEmpty ? `🎤 ${ui("speakHint", lang)}` : " "}
+                  </button>
+                )}
+              </dd>
+            </div>
           );
         })}
-      </ul>
-    </div>
+      </dl>
+    </section>
   );
 }
