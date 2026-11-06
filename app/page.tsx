@@ -16,7 +16,7 @@ export default function Home() {
       </div>
       <nav className="ledger flex flex-col rounded-sm" aria-label="Choose who you are">
         <Link href="/farmer" className="flex items-center gap-4 border-b border-rule py-5 pl-14 pr-5 hover:bg-gold/20">
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-4 border-forest bg-gold text-forest" aria-hidden>
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-4 border-forest bg-forest text-paper" aria-hidden>
             <Mic className="h-7 w-7" strokeWidth={2.25} />
           </span>
           <span>

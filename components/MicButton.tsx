@@ -19,7 +19,7 @@ export function MicButton({ state, onPress, label }: { state: MicState; onPress:
         aria-label={label}
         aria-pressed={recording}
         className={`relative isolate grid h-24 w-24 place-items-center rounded-full border-4 border-forest shadow-[0_8px_18px_-6px_rgb(35_71_53/0.55)] transition-[transform,box-shadow] duration-150 ease-out active:translate-y-0.5 active:shadow-[0_3px_8px_-4px_rgb(35_71_53/0.55)] ${
-          recording ? "mic-ring bg-terracotta text-paper" : busy ? "bg-paper text-forest" : "bg-gold text-forest"
+          recording ? "mic-ring bg-terracotta text-paper" : busy ? "bg-paper text-forest" : "bg-forest text-paper"
         }`}
       >
         <Icon
