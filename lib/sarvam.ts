@@ -29,7 +29,8 @@ async function call(path: string, body: FormData | object): Promise<Record<strin
 
 async function stt(audio: Blob, mode: "translate" | "transcribe"): Promise<string> {
   const form = new FormData();
-  form.append("file", audio, "speech.webm");
+  const ext = audio.type.includes("mp4") ? "m4a" : audio.type.includes("ogg") ? "ogg" : "webm"; // iPhone records mp4
+  form.append("file", audio, `speech.${ext}`);
   form.append("model", "saaras:v4");
   form.append("mode", mode);
   const body = await call("/speech-to-text", form);

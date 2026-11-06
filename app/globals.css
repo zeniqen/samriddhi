@@ -1,26 +1,63 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #fbf7ef;
+  --card: #ffffff;
+  --ink: #1f2a1f;
+  --muted: #6b6b5e;
+  --line: #e7e0d2;
+  --leaf: #2f6b3a;
+  --leaf-soft: #e3efe2;
+  --tomato: #d2452e;
+  --tomato-soft: #fbe3dd;
+  --turmeric: #e9a23b;
+  --turmeric-soft: #fcefd7;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-leaf: var(--leaf);
+  --color-leaf-soft: var(--leaf-soft);
+  --color-tomato: var(--tomato);
+  --color-tomato-soft: var(--tomato-soft);
+  --color-turmeric: var(--turmeric);
+  --color-turmeric-soft: var(--turmeric-soft);
+  --font-sans: var(--font-mukta), var(--font-gurmukhi), system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@keyframes ring {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.mic-ring::before,
+.mic-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--tomato);
+  animation: ring 1.4s ease-out infinite;
+  z-index: -1;
+}
+.mic-ring::after { animation-delay: 0.7s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mic-ring::before, .mic-ring::after { animation: none; opacity: 0.25; }
 }
