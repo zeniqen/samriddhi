@@ -55,12 +55,6 @@ export default function FarmerPage() {
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [ready, setReady] = useState(false);
   const stopRef = useRef<null | (() => Promise<Blob>)>(null);
-  // Browsers only allow sound after the person has touched the page once.
-  const interactedRef = useRef(false);
-  const shownRef = useRef(new Set<string>());
-  const seededRef = useRef(false);
-  const [momentId, setMomentId] = useState<string | null>(null);
-  const [momentHeard, setMomentHeard] = useState(false);
 
   useEffect(() => {
     // One-time sync from browser-only sources after hydration (server render can't see them).
@@ -188,14 +182,7 @@ export default function FarmerPage() {
         const [nRes, lRes] = await Promise.all([fetch(`/api/notifications?farmerId=${farmerId}`), fetch("/api/listings")]);
         const [nData, lData] = await Promise.all([nRes.json(), lRes.json()]);
         if (!alive) return;
-        const list: Notification[] = nData.notifications ?? [];
-        // Orders that were already waiting when the page opened don't take over the screen;
-        // they show as the "new orders" badge. Only an order arriving while open gets the full moment.
-        if (!seededRef.current) {
-          list.forEach((n) => shownRef.current.add(n.id));
-          seededRef.current = true;
-        }
-        setNotifications(list);
+        setNotifications(nData.notifications ?? []);
         setMyListings((lData.listings ?? []).filter((l: Listing) => l.farmerId === farmerId));
       } catch {}
     };
@@ -206,12 +193,6 @@ export default function FarmerPage() {
       clearInterval(id);
     };
   }, [farmerId, ready]);
-
-  // A different farmer means a fresh set of "already waiting" orders.
-  useEffect(() => {
-    seededRef.current = false;
-    shownRef.current.clear();
-  }, [farmerId]);
 
   /** The order sentence in whichever language is on screen now (older orders keep their stored text). */
   const orderText = useCallback(
@@ -239,31 +220,6 @@ export default function FarmerPage() {
     markHeard(n);
   };
 
-  const unheard = notifications.filter((n) => !n.heard && n.facts);
-  const moment = notifications.find((n) => n.id === momentId) ?? null;
-
-  // A new sale takes over the screen once, when the farmer isn't in the middle of something.
-  useEffect(() => {
-    if (momentId || mic !== "idle") return;
-    const next = unheard.find((n) => !shownRef.current.has(n.id));
-    if (!next) return;
-    shownRef.current.add(next.id);
-    setMomentId(next.id);
-    setMomentHeard(false);
-    if (interactedRef.current) void speak(orderText(next)).then(() => setMomentHeard(true));
-  }, [unheard, momentId, mic, speak, orderText]);
-
-  const playMoment = async () => {
-    if (!moment) return;
-    await speak(orderText(moment));
-    setMomentHeard(true);
-  };
-
-  const closeMoment = () => {
-    if (moment) markHeard(moment);
-    setMomentId(null);
-  };
-
   /** Confirm and re-record stay live while the read-back plays: a tap stops the voice and acts. */
   const confirmNow = () => {
     speakSeq.current++; // the interrupted read-back must not flip the screen back to idle
@@ -289,10 +245,7 @@ export default function FarmerPage() {
   const isEmpty = Object.keys(fields).length === 0;
 
   return (
-    <main
-      className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pb-56 pt-6"
-      onPointerDown={() => (interactedRef.current = true)}
-    >
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pb-56 pt-6">
       <header className="flex items-center justify-between gap-4">
         <div>
           <p className="font-display text-[1.75rem] font-bold leading-none tracking-tight text-forest">
@@ -528,16 +481,6 @@ export default function FarmerPage() {
               <>
                 <MicButton state={mic} onPress={toggleRecording} label={micLabel} />
                 <div className="flex items-center gap-2">
-                  {unheard.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setMomentId(unheard[0].id)}
-                      className="flex min-h-11 items-center gap-2 rounded-full bg-terracotta-text px-4 text-base font-semibold text-surface"
-                    >
-                      <BellRing aria-hidden className="h-5 w-5" strokeWidth={2.25} />
-                      {unheard.length} {ui("newOrders", lang)}
-                    </button>
-                  )}
                   <button
                     type="button"
                     onClick={() => setShowKeyboard((s) => !s)}
@@ -556,61 +499,6 @@ export default function FarmerPage() {
         </div>
       )}
 
-      {/* A sale takes over the screen: forest field, the amount in gold. */}
-      {moment?.facts && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={ui("youGet", lang)}
-          className="fixed inset-0 z-30 flex flex-col justify-between bg-forest px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-10 text-surface"
-        >
-          <div className="mx-auto flex w-full max-w-md flex-col gap-8">
-            <p className="flex w-fit items-center gap-2 rounded-full bg-surface/10 px-3 py-1.5 text-base font-semibold text-sage-soft">
-              <BellRing aria-hidden className="h-5 w-5" strokeWidth={2.25} />
-              {ui("newOrder", lang)}
-            </p>
-            <div>
-              <p className="text-xl text-sage-soft">{ui("youGet", lang)}</p>
-              <p className="settle figure mt-1 text-[clamp(4rem,22vw,6rem)] font-semibold leading-none text-gold">
-                {inr(moment.facts.total)}
-              </p>
-            </div>
-            <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 border-t border-surface/15 pt-6 text-lg">
-              <dt className="text-sage-soft">{ui("crop", lang)}</dt>
-              <dd className="font-semibold">
-                {moment.facts.kg} {ui("kg", lang)} {cropName(moment.facts.crop, lang)}
-              </dd>
-              <dt className="text-sage-soft">{ui("boughtBy", lang)}</dt>
-              <dd className="font-semibold">{buyerInScript(moment.facts.buyerId, moment.facts.buyerName, lang)}</dd>
-              <dt className="text-sage-soft">{ui("pickup", lang)}</dt>
-              <dd className="font-semibold">{formatDate(moment.facts.pickupDate, lang)}</dd>
-            </dl>
-          </div>
-          <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-3">
-            <button
-              type="button"
-              autoFocus
-              onClick={playMoment}
-              disabled={busy}
-              className={`flex min-h-14 items-center justify-center gap-2 rounded-full text-lg font-semibold transition-colors disabled:opacity-60 ${
-                momentHeard ? "border border-surface/30 text-surface" : "bg-surface text-forest"
-              }`}
-            >
-              <Volume2 aria-hidden className="h-6 w-6" strokeWidth={2.25} />
-              {ui("listen", lang)}
-            </button>
-            <button
-              type="button"
-              onClick={closeMoment}
-              disabled={!momentHeard || busy}
-              className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-gold text-lg font-bold text-forest transition-opacity disabled:opacity-35"
-            >
-              <Check aria-hidden className="h-6 w-6" strokeWidth={3} />
-              {ui("ok", lang)}
-            </button>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
