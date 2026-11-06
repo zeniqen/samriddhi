@@ -30,6 +30,12 @@ describe("llmTurn", () => {
     await expect(llmTurn(input)).rejects.toBeInstanceOf(LlmError);
   });
 
+  test("accepts JSON wrapped in a markdown code fence", async () => {
+    const turn = { updates: { quantityKg: 200 }, replyEnglish: "Price?", intent: "fill" };
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ message: { content: "```json\n" + JSON.stringify(turn) + "\n```" } })));
+    await expect(llmTurn(input)).resolves.toEqual(turn);
+  });
+
   test("returns parsed turn on valid JSON", async () => {
     const turn = { updates: { crop: "tomato", quantityKg: 100 }, replyEnglish: "What price per kg?", intent: "fill" };
     vi.stubGlobal("fetch", vi.fn(async () => Response.json({ message: { content: JSON.stringify(turn) } })));

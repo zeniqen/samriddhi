@@ -66,9 +66,11 @@ export function buildSystemPrompt(today: string, fields: ListingFields): string 
     "Convert units: 1 quintal = 100 kg; a price per quintal is divided by 100. Resolve 'tomorrow'/'day after tomorrow' from today.",
     "Put only what the farmer actually said in updates. Never invent or guess a number, place or date.",
     "replyEnglish: one short, warm, simple sentence in English. Ask for at most ONE missing field. No emojis.",
-    "When all five fields are known, replyEnglish must read them all back (with the numbers as digits) and ask 'Is this correct?'.",
+    "Write numbers as digits. Say dates as day and month name (e.g. 8 November), never as 2026-11-08.",
+    "When all five fields are known, replyEnglish must read them all back and ask 'Is this correct?'.",
     "intent: 'confirm' only if the farmer says yes after a full read-back; 'correct' if they change a field; 'question' if they ask something; otherwise 'fill'.",
-    "Output only the JSON object.",
+    'Output ONLY this JSON shape, no markdown: {"updates":{"crop":"tomato","quantityKg":100},"replyEnglish":"...","intent":"fill"}',
+    "Use exactly these keys; leave out any field the farmer did not mention.",
   ].join("\n");
 }
 
@@ -86,7 +88,10 @@ export async function llmTurn(input: {
   const content = await chat(messages, TURN_SCHEMA);
   let parsed: unknown;
   try {
-    parsed = JSON.parse(content);
+    // Some cloud models ignore `format` and wrap the JSON in a ```json fence or extra text.
+    const start = content.indexOf("{");
+    const end = content.lastIndexOf("}");
+    parsed = JSON.parse(start >= 0 && end > start ? content.slice(start, end + 1) : content);
   } catch {
     throw new LlmError("Ollama returned invalid JSON");
   }
