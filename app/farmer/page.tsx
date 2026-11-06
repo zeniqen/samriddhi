@@ -1,10 +1,11 @@
 "use client";
 
-import { BellRing, Check, Keyboard, Lock, Mic, Plus, RotateCcw, Trash2, Volume2 } from "lucide-react";
+import { BellRing, Check, Keyboard, Lock, Mic, Phone, Plus, RotateCcw, Trash2, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { inr, ListingCard } from "@/components/ListingCard";
 import { MicButton, type MicState } from "@/components/MicButton";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
+import { PICKUP_PARTNER } from "@/lib/seed-data";
 import { playReply, startRecording, stopReply } from "@/lib/audio-client";
 import { buyerInScript, readBackVars } from "@/lib/readback";
 import { cropName, formatDate, t, type TemplateKey } from "@/lib/templates";
@@ -462,6 +463,15 @@ export default function FarmerPage() {
               <Volume2 aria-hidden className="h-5 w-5" strokeWidth={2.25} />
               {ui("listen", lang)}
             </button>
+            {/* A plain tel: link: the phone's own dialer places the call, no app or account needed. */}
+            <a
+              href={`tel:${PICKUP_PARTNER.phone.replace(/\s/g, "")}`}
+              aria-label={`${ui("callPickup", lang)}: ${PICKUP_PARTNER.name}, ${PICKUP_PARTNER.phone}`}
+              className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-forest/25 text-base font-semibold text-forest transition-colors hover:bg-sage-soft active:scale-[0.98]"
+            >
+              <Phone aria-hidden className="h-5 w-5" strokeWidth={2.25} />
+              {ui("callPickup", lang)}
+            </a>
           </article>
         ))}
       </section>

@@ -26,6 +26,9 @@ export const SEED_FARMERS: Farmer[] = [
   { id: "f5", name: "Harjit Kaur", village: "Jagraon", lang: "pa", phone: "+91 90000 00005" },
 ];
 
+/** The pickup partner farmers call to arrange collection. Placeholder number, like the farmers' (fictional). */
+export const PICKUP_PARTNER = { name: "Balwinder Singh", phone: "+91 90000 00099" };
+
 export const SEED_BUYERS: Buyer[] = [
   { id: "b1", name: "Hotel Sagar Dhaba", type: "restaurant", area: "Model Town, Ludhiana" },
   { id: "b2", name: "Punjab Rasoi Caterers", type: "restaurant", area: "Sarabha Nagar, Ludhiana" },
