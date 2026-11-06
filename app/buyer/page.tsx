@@ -197,8 +197,9 @@ export default function BuyerPage() {
                 {status && (
                   <p
                     role="status"
-                    className={`border-l-4 px-3 py-2 ${status.kind === "ok" ? "border-field bg-field-soft text-field" : "border-bahi bg-paper text-bahi"}`}
+                    className={`font-semibold ${status.kind === "ok" ? "text-field" : "text-bahi"}`}
                   >
+                    {status.kind === "ok" ? "✓ " : "✕ "}
                     {status.text}
                   </p>
                 )}
