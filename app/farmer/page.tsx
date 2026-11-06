@@ -58,6 +58,7 @@ export default function FarmerPage() {
   // Browsers only allow sound after the person has touched the page once.
   const interactedRef = useRef(false);
   const shownRef = useRef(new Set<string>());
+  const seededRef = useRef(false);
   const [momentId, setMomentId] = useState<string | null>(null);
   const [momentHeard, setMomentHeard] = useState(false);
 
@@ -107,7 +108,7 @@ export default function FarmerPage() {
   );
 
   const sendTurn = useCallback(
-    async (payload: { audio?: Blob; text?: string; confirm?: boolean; demo?: boolean }) => {
+    async (payload: { audio?: Blob; text?: string; confirm?: boolean }) => {
       setMic("thinking");
       const form = new FormData();
       sessionRef.current ??= newSessionId();
@@ -117,7 +118,6 @@ export default function FarmerPage() {
       if (payload.audio) form.append("audio", payload.audio);
       if (payload.text) form.append("text", payload.text);
       if (payload.confirm) form.append("confirm", "true");
-      if (payload.demo) form.append("demo", "true");
       try {
         const res = await fetch("/api/turn", { method: "POST", body: form });
         const data: TurnResponse = await res.json();
@@ -132,11 +132,7 @@ export default function FarmerPage() {
           setTapToFill(data.tapToFill);
           if (data.complete) setShowKeyboard(false); // one decision at a time: confirm or say again
         }
-        // The demo pre-fill arrives before the farmer has touched the page, so it is shown, not spoken.
-        if (payload.demo) {
-          setReply(data.replyLocal);
-          setMic("idle");
-        } else await say(data.replyLocal);
+        await say(data.replyLocal);
       } catch {
         await say(t("askAgain", lang));
       }
@@ -183,14 +179,6 @@ export default function FarmerPage() {
     setListedId(null);
   };
 
-  // Open with a ready-made demo listing so the card is never blank; "say it all again" clears it.
-  const demoLoaded = useRef(false);
-  useEffect(() => {
-    if (!ready || demoLoaded.current) return;
-    demoLoaded.current = true;
-    void sendTurn({ demo: true });
-  }, [ready, sendTurn]);
-
   // Poll for order confirmations and this farmer's live listings.
   useEffect(() => {
     if (!ready) return;
@@ -200,7 +188,14 @@ export default function FarmerPage() {
         const [nRes, lRes] = await Promise.all([fetch(`/api/notifications?farmerId=${farmerId}`), fetch("/api/listings")]);
         const [nData, lData] = await Promise.all([nRes.json(), lRes.json()]);
         if (!alive) return;
-        setNotifications(nData.notifications ?? []);
+        const list: Notification[] = nData.notifications ?? [];
+        // Orders that were already waiting when the page opened don't take over the screen;
+        // they show as the "new orders" badge. Only an order arriving while open gets the full moment.
+        if (!seededRef.current) {
+          list.forEach((n) => shownRef.current.add(n.id));
+          seededRef.current = true;
+        }
+        setNotifications(list);
         setMyListings((lData.listings ?? []).filter((l: Listing) => l.farmerId === farmerId));
       } catch {}
     };
@@ -211,6 +206,12 @@ export default function FarmerPage() {
       clearInterval(id);
     };
   }, [farmerId, ready]);
+
+  // A different farmer means a fresh set of "already waiting" orders.
+  useEffect(() => {
+    seededRef.current = false;
+    shownRef.current.clear();
+  }, [farmerId]);
 
   /** The order sentence in whichever language is on screen now (older orders keep their stored text). */
   const orderText = useCallback(

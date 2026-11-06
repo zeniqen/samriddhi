@@ -2,8 +2,7 @@
 import { parseFallback } from "./fallback-parser";
 import { nextQuestionKey, type TemplateKey } from "./templates";
 import { validateUpdates } from "./validate";
-import { addDays } from "./dates";
-import type { ConversationState, Farmer, Intent, Lang, ListingFields, LlmTurn } from "./types";
+import type { ConversationState, Intent, Lang, ListingFields, LlmTurn } from "./types";
 import type { llmTurn } from "./llm";
 
 const HISTORY_LIMIT = 6;
@@ -72,9 +71,4 @@ export function shouldCreateListing(x: {
   after: ListingFields;
 }): boolean {
   return x.wasComplete && x.intent === "confirm" && FIELD_KEYS.every((k) => x.before[k] === x.after[k]);
-}
-
-/** A ready-made listing for demos: the farmer's own village, 100 kg tomatoes at ₹16, pickup in two days. */
-export function demoFields(farmer: Farmer, today: string): Required<ListingFields> {
-  return { crop: "tomato", quantityKg: 100, askPricePerKg: 16, village: farmer.village, pickupDate: addDays(today, 2) };
 }

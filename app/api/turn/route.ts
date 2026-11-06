@@ -1,4 +1,4 @@
-import { demoFields, isComplete, newConversation, runTurn, shouldCreateListing, TAP_TO_FILL_AFTER } from "@/lib/conversation";
+import { isComplete, newConversation, runTurn, shouldCreateListing, TAP_TO_FILL_AFTER } from "@/lib/conversation";
 import { todayIST } from "@/lib/dates";
 import { allowedFromFields, allowedNumbers, mentionsAll } from "@/lib/factcheck";
 import { llmTurn } from "@/lib/llm";
@@ -58,12 +58,6 @@ export async function POST(req: Request) {
       ...extra,
     });
   };
-
-  // Demo: pre-fill an empty listing so the screen is never blank in a demo. Read-back is the fixed sentence.
-  if (form.get("demo") === "true") {
-    if (Object.keys(state.fields).length === 0) state = { ...state, fields: demoFields(farmer, today) };
-    return respond(t("readBack", lang, readBackVars(state.fields, lang)), "");
-  }
 
   // ✅ tap
   if (form.get("confirm") === "true") {
