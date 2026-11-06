@@ -23,7 +23,7 @@ export function MicButton({ state, onPress, label }: { state: MicState; onPress:
       <div className={`relative isolate rounded-full ${recording ? "mic-ring" : ""}`}>
         <NoiseBackground
           // Samriddhi is light-only: pin the light base (sage) and light shadow even when the phone is in dark mode.
-          containerClassName="w-fit p-2 rounded-full mx-auto bg-sage-soft dark:bg-sage-soft dark:shadow-[0px_0.5px_1px_0px_var(--color-neutral-400)_inset,0px_1px_0px_0px_var(--color-neutral-100)]"
+          containerClassName="w-fit p-2 rounded-full mx-auto backdrop-blur-none bg-sage-soft dark:bg-sage-soft dark:shadow-[0px_0.5px_1px_0px_var(--color-neutral-400)_inset,0px_1px_0px_0px_var(--color-neutral-100)]"
           gradientColors={recording ? HALO_RECORDING : HALO_IDLE}
           animating={!reduceMotion && !busy}
         >

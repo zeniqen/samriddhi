@@ -78,6 +78,17 @@ export const NoiseBackground = ({
   const topGradientX = useTransform(springX, (val) => val * 0.1 - 50);
 
   const velocityRef = useRef({ x: 0, y: 0 });
+  // Samriddhi: size cached by a ResizeObserver; measuring layout every frame forced reflow during scroll.
+  const sizeRef = useRef({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      if (entry) sizeRef.current = { w: entry.contentRect.width, h: entry.contentRect.height };
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const lastDirectionChangeRef = useRef(0);
 
   // Initialize position to center
@@ -117,11 +128,10 @@ export const NoiseBackground = ({
 
   // Animate using motion/react's useAnimationFrame
   useAnimationFrame((time) => {
-    if (!animating || !containerRef.current) return;
+    if (!animating || !sizeRef.current.w) return;
 
-    const rect = containerRef.current.getBoundingClientRect();
-    const maxX = rect.width;
-    const maxY = rect.height;
+    const maxX = sizeRef.current.w;
+    const maxY = sizeRef.current.h;
 
     // Change direction randomly every 1.5-3 seconds
     if (time - lastDirectionChangeRef.current > 1500 + Math.random() * 1500) {

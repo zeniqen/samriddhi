@@ -185,8 +185,11 @@ export default function FarmerPage() {
         const [nRes, lRes] = await Promise.all([fetch(`/api/notifications?farmerId=${farmerId}`), fetch("/api/listings")]);
         const [nData, lData] = await Promise.all([nRes.json(), lRes.json()]);
         if (!alive) return;
-        setNotifications(nData.notifications ?? []);
-        setMyListings((lData.listings ?? []).filter((l: Listing) => l.farmerId === farmerId));
+        // Only re-render when something changed: a fresh array every 3 s re-rendered the page mid-scroll.
+        const notifs: Notification[] = nData.notifications ?? [];
+        const mine: Listing[] = (lData.listings ?? []).filter((l: Listing) => l.farmerId === farmerId);
+        setNotifications((prev) => (JSON.stringify(prev) === JSON.stringify(notifs) ? prev : notifs));
+        setMyListings((prev) => (JSON.stringify(prev) === JSON.stringify(mine) ? prev : mine));
       } catch {}
     };
     load();

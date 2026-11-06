@@ -56,7 +56,9 @@ export function LiquidGlass({
 
   useEffect(() => {
     if (prefersReducedTransparency()) setMode("opaque");
-    else if (isSafariLike() || !supportsUrlBackdropFilter()) setMode("simple");
+    // Samriddhi: touch phones get frosted glass too. The refraction filter re-runs on every scroll frame
+    // (the backdrop changes), which made /farmer stutter on mid-range Android.
+    else if (isSafariLike() || !supportsUrlBackdropFilter() || isTouchPhone()) setMode("simple");
   }, []);
 
   useEffect(() => {
@@ -134,7 +136,7 @@ export function LiquidGlass({
     mode === "opaque"
       ? "none"
       : mode === "simple"
-        ? "blur(20px) saturate(1.4)"
+        ? "blur(12px) saturate(1.4)"
         : filter
           ? `url(#${filter.id}) blur(0.5px) saturate(1.85) brightness(1.02)`
           : "blur(10px) saturate(1.6) brightness(1.04)";
@@ -182,6 +184,11 @@ function supportsUrlBackdropFilter() {
     CSS.supports("backdrop-filter", "url(#x)") ||
     CSS.supports("-webkit-backdrop-filter", "url(#x)")
   );
+}
+
+function isTouchPhone() {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(pointer: coarse)").matches;
 }
 
 function prefersReducedTransparency() {
