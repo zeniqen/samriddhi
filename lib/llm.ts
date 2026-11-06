@@ -1,0 +1,110 @@
+// The only code that talks to Ollama Cloud. Works in English only.
+import type { ConversationState, Crop, Intent, ListingFields, LlmTurn } from "./types";
+
+export class LlmError extends Error {}
+
+const TIMEOUT_MS = 8_000;
+const INTENTS: Intent[] = ["fill", "question", "confirm", "correct"];
+
+const TURN_SCHEMA = {
+  type: "object",
+  properties: {
+    updates: {
+      type: "object",
+      properties: {
+        crop: { type: "string", enum: ["tomato", "onion", "potato"] },
+        quantityKg: { type: "number" },
+        askPricePerKg: { type: "number" },
+        village: { type: "string" },
+        pickupDate: { type: "string" },
+      },
+    },
+    replyEnglish: { type: "string" },
+    intent: { type: "string", enum: INTENTS },
+  },
+  required: ["updates", "replyEnglish", "intent"],
+};
+
+type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
+
+async function chat(messages: ChatMessage[], format?: object): Promise<string> {
+  const base = process.env.OLLAMA_BASE_URL ?? "https://ollama.com";
+  let res: Response;
+  try {
+    res = await fetch(`${base}/api/chat`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.OLLAMA_API_KEY ?? ""}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: process.env.OLLAMA_MODEL, stream: false, messages, ...(format && { format }) }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch (e) {
+    throw new LlmError(`Ollama request failed: ${(e as Error).message}`);
+  }
+  if (!res.ok) throw new LlmError(`Ollama HTTP ${res.status}`);
+  const body = await res.json().catch(() => null);
+  const content = body?.message?.content;
+  if (typeof content !== "string") throw new LlmError("Ollama returned no message content");
+  return content;
+}
+
+export function isLlmTurn(x: unknown): x is LlmTurn {
+  if (typeof x !== "object" || x === null) return false;
+  const o = x as Record<string, unknown>;
+  return (
+    typeof o.updates === "object" &&
+    o.updates !== null &&
+    typeof o.replyEnglish === "string" &&
+    INTENTS.includes(o.intent as Intent)
+  );
+}
+
+export function buildSystemPrompt(today: string, fields: ListingFields): string {
+  // TODO(human): write the instructions Ollama follows on every turn.
+  return `Today is ${today}. Fields so far: ${JSON.stringify(fields)}. Output only JSON.`;
+}
+
+export async function llmTurn(input: {
+  englishText: string;
+  fields: ListingFields;
+  today: string;
+  history: ConversationState["history"];
+}): Promise<LlmTurn> {
+  const messages: ChatMessage[] = [
+    { role: "system", content: buildSystemPrompt(input.today, input.fields) },
+    ...input.history.map((h): ChatMessage => ({ role: h.role === "farmer" ? "user" : "assistant", content: h.text })),
+    { role: "user", content: input.englishText },
+  ];
+  const content = await chat(messages, TURN_SCHEMA);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new LlmError("Ollama returned invalid JSON");
+  }
+  if (!isLlmTurn(parsed)) throw new LlmError("Ollama JSON does not match LlmTurn");
+  return parsed;
+}
+
+export async function llmConfirmation(facts: {
+  buyerName: string;
+  kg: number;
+  crop: Crop;
+  pricePerKg: number;
+  total: number;
+  pickupDate: string;
+}): Promise<string> {
+  const content = await chat([
+    {
+      role: "system",
+      content:
+        "Write a warm, simple 2-sentence message in English to a farmer confirming a sale. " +
+        "Use only the numbers given, written as digits. Write the date as day and month name, e.g. 8 November. " +
+        "No greetings like 'Dear', no emojis, no other numbers.",
+    },
+    {
+      role: "user",
+      content: `Buyer: ${facts.buyerName}. Quantity: ${facts.kg} kg of ${facts.crop}. Price: ${facts.pricePerKg} rupees per kg. Farmer receives: ${facts.total} rupees. Pickup date: ${facts.pickupDate}.`,
+    },
+  ]);
+  return content.trim();
+}
