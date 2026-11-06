@@ -2,34 +2,40 @@
 
 /* Samriddhi — the trader's ledger (bahi-khata): ruled pages, red margins, ink-blue figures. */
 :root {
-  --page: #fbf4d9; /* ledger paper, mustard-tinted */
-  --paper: #fffcf0; /* a slip laid on the page */
-  --ink: #1c2b6b; /* fountain-pen ledger ink */
-  --ink-soft: #4a5687;
-  --bahi: #a3241c; /* the red of the ledger's cloth and rulings */
-  --rule: rgb(163 36 28 / 0.22);
-  --sarson: #e5a800; /* mustard flower: the farmer's one action */
-  --field: #1d6b3a; /* money that reaches the farmer */
-  --field-soft: #e2efdf;
+  /* Samriddhi palette (pinned): Deep Forest, Sage Green, Harvest Gold, Terracotta, Warm Ivory, Soil Brown.
+     Derived shades exist only where a pinned colour fails WCAG for text. */
+  --page: #f6f3e9; /* Warm Ivory: main background */
+  --paper: #fbf9f3; /* ivory lifted: slips and cards laid on the page */
+  --forest: #234735; /* Deep Forest: brand, headings, values, primary actions (9.3:1 on ivory) */
+  --soil: #66513e; /* Soil Brown: body text (6.7:1) */
+  --soil-soft: #7a6450; /* derived: small labels (5.0:1) */
+  --terracotta: #b96f4e; /* Terracotta: ledger rulings, alerts, recording (lines/icons, 3.5:1) */
+  --terracotta-text: #9a5236; /* derived: alert text (5.2:1) */
+  --gold: #d5a84b; /* Harvest Gold: highlights and key metrics; only behind forest content (4.7:1) */
+  --sage: #8faf8a; /* Sage Green: secondary elements */
+  --sage-soft: #e4ebdd; /* derived: success tint (forest on it 8.5:1) */
+  --rule: rgb(185 111 78 / 0.28);
 }
 
 @theme inline {
   --color-page: var(--page);
   --color-paper: var(--paper);
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-bahi: var(--bahi);
+  --color-forest: var(--forest);
+  --color-soil: var(--soil);
+  --color-soil-soft: var(--soil-soft);
+  --color-terracotta: var(--terracotta);
+  --color-terracotta-text: var(--terracotta-text);
+  --color-gold: var(--gold);
+  --color-sage: var(--sage);
+  --color-sage-soft: var(--sage-soft);
   --color-rule: var(--rule);
-  --color-sarson: var(--sarson);
-  --color-field: var(--field);
-  --color-field-soft: var(--field-soft);
   --font-sans: var(--font-mukta), var(--font-gurmukhi), system-ui, sans-serif;
   --font-ledger: var(--font-tiro), var(--font-tiro-pa), Georgia, serif;
 }
 
 body {
   background: var(--page);
-  color: var(--ink);
+  color: var(--soil);
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
 }
@@ -41,29 +47,29 @@ button {
 }
 
 ::selection {
-  background: var(--sarson);
-  color: var(--ink);
+  background: var(--gold);
+  color: var(--forest);
 }
 
 input {
-  caret-color: var(--bahi);
+  caret-color: var(--terracotta);
 }
 
 :focus-visible {
-  outline: 3px solid var(--ink);
+  outline: 3px solid var(--forest);
   outline-offset: 3px;
 }
 
-/* A ruled slip: faint red lines and a double red margin, like a page of the bahi. */
+/* A ruled slip: faint terracotta lines and a double margin, like a page of the bahi-khata. */
 .ledger {
   background-color: var(--paper);
-  background-image: linear-gradient(to right, transparent 2.25rem, var(--bahi) 2.25rem, var(--bahi) calc(2.25rem + 1px), transparent calc(2.25rem + 1px), transparent calc(2.25rem + 4px), var(--bahi) calc(2.25rem + 4px), var(--bahi) calc(2.25rem + 5px), transparent calc(2.25rem + 5px));
-  box-shadow: 0 1px 0 var(--rule), 0 10px 24px -18px rgb(28 43 107 / 0.45);
+  background-image: linear-gradient(to right, transparent 2.25rem, var(--terracotta) 2.25rem, var(--terracotta) calc(2.25rem + 1px), transparent calc(2.25rem + 1px), transparent calc(2.25rem + 4px), var(--terracotta) calc(2.25rem + 4px), var(--terracotta) calc(2.25rem + 5px), transparent calc(2.25rem + 5px));
+  box-shadow: 0 1px 0 var(--rule), 0 10px 24px -18px rgb(35 71 53 / 0.35);
 }
 
-/* Total sits on a double underline, the accountant's way of closing a sum. */
+/* Total sits on a double underline, the accountant's way of closing a sum, in Harvest Gold. */
 .double-rule {
-  border-bottom: 3px double var(--bahi);
+  border-bottom: 4px double var(--gold);
 }
 
 /* A slip line inks in when its value is heard. */
@@ -83,7 +89,7 @@ input {
   position: absolute;
   inset: 0;
   border-radius: 9999px;
-  background: var(--bahi);
+  background: var(--terracotta);
   animation: ring 1.4s ease-out infinite;
   z-index: -1;
 }

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "Farmers list produce by voice in Hindi or Punjabi. City buyers see where every rupee goes.",
 };
 
-export const viewport: Viewport = { themeColor: "#fbf4d9", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#f6f3e9", width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

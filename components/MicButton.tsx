@@ -18,8 +18,8 @@ export function MicButton({ state, onPress, label }: { state: MicState; onPress:
         disabled={busy}
         aria-label={label}
         aria-pressed={recording}
-        className={`relative isolate grid h-24 w-24 place-items-center rounded-full border-4 border-ink shadow-[0_8px_18px_-6px_rgb(28_43_107/0.6)] transition-[transform,box-shadow] duration-150 ease-out active:translate-y-0.5 active:shadow-[0_3px_8px_-4px_rgb(28_43_107/0.6)] ${
-          recording ? "mic-ring bg-bahi text-paper" : busy ? "bg-paper text-ink" : "bg-sarson text-ink"
+        className={`relative isolate grid h-24 w-24 place-items-center rounded-full border-4 border-forest shadow-[0_8px_18px_-6px_rgb(35_71_53/0.55)] transition-[transform,box-shadow] duration-150 ease-out active:translate-y-0.5 active:shadow-[0_3px_8px_-4px_rgb(35_71_53/0.55)] ${
+          recording ? "mic-ring bg-terracotta text-paper" : busy ? "bg-paper text-forest" : "bg-gold text-forest"
         }`}
       >
         <Icon
@@ -28,7 +28,7 @@ export function MicButton({ state, onPress, label }: { state: MicState; onPress:
           className={`${state === "recording" ? "h-9 w-9 fill-current" : "h-11 w-11"} ${state === "thinking" ? "animate-spin motion-reduce:animate-none" : ""}`}
         />
       </button>
-      <p className="min-h-6 text-center text-base font-semibold text-ink" aria-live="polite">
+      <p className="min-h-6 text-center text-base font-semibold text-forest" aria-live="polite">
         {label}
       </p>
     </div>

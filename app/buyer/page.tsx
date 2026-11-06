@@ -72,17 +72,17 @@ export default function BuyerPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-8 sm:px-8">
-      <header className="flex flex-wrap items-end justify-between gap-6 border-b-2 border-bahi pb-5">
+      <header className="flex flex-wrap items-end justify-between gap-6 border-b-2 border-terracotta pb-5">
         <div>
-          <p className="font-ledger text-4xl leading-none text-bahi">Samriddhi</p>
-          <h1 className="mt-2 text-xl font-semibold text-ink">Tomatoes from Ludhiana farms, priced in the open</h1>
+          <p className="font-ledger text-4xl leading-none text-forest">Samriddhi</p>
+          <h1 className="mt-2 text-xl font-semibold text-forest">Tomatoes from Ludhiana farms, priced in the open</h1>
         </div>
-        <label className="flex flex-col text-sm text-ink-soft">
+        <label className="flex flex-col text-sm text-soil-soft">
           Ordering for
           <select
             value={buyerId}
             onChange={(e) => setBuyerId(e.target.value)}
-            className="mt-1 border-2 border-ink bg-paper px-3 py-2 text-base text-ink"
+            className="mt-1 border-2 border-forest bg-paper px-3 py-2 text-base text-forest"
           >
             {buyers.map((b) => (
               <option key={b.id} value={b.id}>
@@ -95,15 +95,15 @@ export default function BuyerPage() {
 
       <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
         <section aria-labelledby="board-title">
-          <h2 id="board-title" className="mb-3 font-ledger text-2xl text-bahi">
+          <h2 id="board-title" className="mb-3 font-ledger text-2xl text-forest">
             Today’s board
           </h2>
           {listings.length === 0 ? (
-            <p className="text-ink-soft">No produce listed right now. New listings appear here as farmers speak them.</p>
+            <p className="text-soil-soft">No produce listed right now. New listings appear here as farmers speak them.</p>
           ) : (
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b-2 border-ink text-left text-sm text-ink-soft">
+                <tr className="border-b-2 border-forest text-left text-sm text-soil-soft">
                   <th className="py-2 font-normal">Farmer</th>
                   <th className="hidden py-2 font-normal sm:table-cell">Crop</th>
                   <th className="py-2 text-right font-normal">Kg left</th>
@@ -117,7 +117,7 @@ export default function BuyerPage() {
                   return (
                     <tr
                       key={l.id}
-                      className={`border-b border-rule ${isSelected ? "bg-paper shadow-[inset_4px_0_0_var(--bahi)]" : "hover:bg-paper/60"}`}
+                      className={`border-b border-rule ${isSelected ? "bg-paper shadow-[inset_4px_0_0_var(--gold)]" : "hover:bg-paper/60"}`}
                     >
                       <td className="py-3 pl-3">
                         <button
@@ -126,8 +126,8 @@ export default function BuyerPage() {
                           aria-pressed={isSelected}
                           className="text-left"
                         >
-                          <span className="block font-semibold text-ink">{l.farmerName}</span>
-                          <span className="block text-sm text-ink-soft">
+                          <span className="block font-semibold text-forest">{l.farmerName}</span>
+                          <span className="block text-sm text-soil-soft">
                             {l.village}
                             <span className="sm:hidden">, pickup {fmtDate(l.pickupDate)}</span>
                           </span>
@@ -148,21 +148,21 @@ export default function BuyerPage() {
         <aside className="ledger self-start rounded-sm py-5 pl-14 pr-5 lg:sticky lg:top-6" aria-live="polite">
           {!selected ? (
             <div className="flex flex-col gap-2">
-              <h2 className="font-ledger text-2xl text-bahi">Where the money goes</h2>
-              <p className="text-ink-soft">Choose a farmer on the board to see each rupee of the price, then place your order.</p>
+              <h2 className="font-ledger text-2xl text-forest">Where the money goes</h2>
+              <p className="text-soil-soft">Choose a farmer on the board to see each rupee of the price, then place your order.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-5">
               <div>
-                <h2 className="font-ledger text-2xl text-bahi">{selected.farmerName}</h2>
-                <p className="text-ink-soft">
+                <h2 className="font-ledger text-2xl text-forest">{selected.farmerName}</h2>
+                <p className="text-soil-soft">
                   {title(selected.crop)} from {selected.village}, {selected.remainingKg} kg left, pickup{" "}
                   {fmtDate(selected.pickupDate)}
                 </p>
               </div>
               <PriceSplit split={selected.split} />
               <form
-                className="flex flex-col gap-3 border-t-2 border-ink pt-4"
+                className="flex flex-col gap-3 border-t-2 border-forest pt-4"
                 onSubmit={(e) => {
                   e.preventDefault();
                   placeOrder();
@@ -176,34 +176,34 @@ export default function BuyerPage() {
                     max={selected.remainingKg}
                     value={kg}
                     onChange={(e) => setKg(e.target.value)}
-                    className="w-28 border-2 border-ink bg-page px-3 py-2 text-right text-lg tabular-nums"
+                    className="w-28 border-2 border-forest bg-page px-3 py-2 text-right text-lg tabular-nums"
                   />
                 </label>
                 {totals && (
                   <dl className="grid grid-cols-[1fr_auto] gap-y-1">
-                    <dt className="text-ink-soft">You pay</dt>
+                    <dt className="text-soil-soft">You pay</dt>
                     <dd className="text-right text-lg font-bold tabular-nums">{inr(totals.buyerTotal)}</dd>
-                    <dt className="text-ink-soft">{selected.farmerName} receives</dt>
-                    <dd className="text-right text-lg font-bold text-field tabular-nums">{inr(totals.farmerTotal)}</dd>
+                    <dt className="text-soil-soft">{selected.farmerName} receives</dt>
+                    <dd className="text-right text-lg font-bold text-forest tabular-nums">{inr(totals.farmerTotal)}</dd>
                   </dl>
                 )}
                 <button
                   type="submit"
                   disabled={placing || !(qty > 0)}
-                  className="bg-ink py-3 text-lg font-bold text-paper disabled:opacity-50"
+                  className="bg-forest py-3 text-lg font-bold text-paper disabled:opacity-50"
                 >
                   {placing ? "Placing order…" : `Place order${qty > 0 ? ` for ${qty} kg` : ""}`}
                 </button>
                 {status && (
                   <p
                     role="status"
-                    className={`font-semibold ${status.kind === "ok" ? "text-field" : "text-bahi"}`}
+                    className={`font-semibold ${status.kind === "ok" ? "text-forest" : "text-terracotta-text"}`}
                   >
                     {status.kind === "ok" ? "✓ " : "✕ "}
                     {status.text}
                   </p>
                 )}
-                <p className="text-xs text-ink-soft">All figures are illustrative assumptions. Per kg: {rupees(selected.split.buyerPerKg)}.</p>
+                <p className="text-xs text-soil-soft">All figures are illustrative assumptions. Per kg: {rupees(selected.split.buyerPerKg)}.</p>
               </form>
             </div>
           )}

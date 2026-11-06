@@ -16,26 +16,26 @@ export function PriceSplit({ split }: { split: Split }) {
       <caption className="sr-only">Price per kg, by who receives it</caption>
       <tbody>
         {LINES.map((line) => (
-          <tr key={line.key} className="border-b border-rule">
-            <th scope="row" className="py-2.5 text-left font-normal">
-              <span className={`block font-semibold ${line.key === "farmerPerKg" ? "text-field" : "text-ink"}`}>
+          <tr key={line.key} className={`border-b border-rule ${line.key === "farmerPerKg" ? "bg-sage-soft" : ""}`}>
+            <th scope="row" className="py-2.5 pl-2 text-left font-normal">
+              <span className="block font-semibold text-forest">
                 {line.label}
               </span>
-              <span className="block text-sm text-ink-soft">{line.note}</span>
+              <span className="block text-sm text-soil-soft">{line.note}</span>
             </th>
             <td
-              className={`py-2.5 text-right align-top text-lg tabular-nums ${line.key === "farmerPerKg" ? "font-bold text-field" : ""}`}
+              className={`py-2.5 pr-2 text-right align-top text-lg tabular-nums ${line.key === "farmerPerKg" ? "font-bold text-forest" : "text-soil"}`}
             >
               {rupees(split[line.key])}
             </td>
           </tr>
         ))}
         <tr>
-          <th scope="row" className="pt-3 text-left font-ledger text-xl font-normal text-bahi">
+          <th scope="row" className="pt-3 text-left font-ledger text-xl font-normal text-forest">
             You pay per kg
           </th>
           <td className="pt-3 text-right">
-            <span className="double-rule inline-block pb-0.5 font-ledger text-2xl tabular-nums text-ink">
+            <span className="double-rule inline-block pb-0.5 font-ledger text-2xl tabular-nums text-forest">
               {rupees(split.buyerPerKg)}
             </span>
           </td>

@@ -273,10 +273,10 @@ export default function FarmerPage() {
     >
       <header className="flex items-center justify-between">
         <div>
-          <p className="font-ledger text-3xl leading-none text-bahi">{ui("brand", lang)}</p>
-          <h1 className="mt-1 text-lg font-semibold text-ink">{ui("title", lang)}</h1>
+          <p className="font-ledger text-3xl leading-none text-forest">{ui("brand", lang)}</p>
+          <h1 className="mt-1 text-lg font-semibold text-forest">{ui("title", lang)}</h1>
         </div>
-        <div className="flex border-2 border-ink text-base font-semibold" role="group" aria-label="भाषा / ਭਾਸ਼ਾ">
+        <div className="flex border-2 border-forest text-base font-semibold" role="group" aria-label="भाषा / ਭਾਸ਼ਾ">
           {(["hi", "pa"] as const).map((l) => (
             <button
               key={l}
@@ -284,7 +284,7 @@ export default function FarmerPage() {
               onClick={() => switchLang(l)}
               aria-pressed={lang === l}
               lang={l}
-              className={`min-h-11 px-3 ${lang === l ? "bg-ink text-paper" : "text-ink"}`}
+              className={`min-h-11 px-3 ${lang === l ? "bg-forest text-paper" : "text-forest"}`}
             >
               {l === "hi" ? "हिंदी" : "ਪੰਜਾਬੀ"}
             </button>
@@ -294,7 +294,7 @@ export default function FarmerPage() {
 
       {listedId ? (
         <section className="flex flex-col gap-4">
-          <p className="flex items-center gap-3 bg-field-soft px-4 py-3 text-xl font-semibold text-field">
+          <p className="flex items-center gap-3 bg-sage-soft px-4 py-3 text-xl font-semibold text-forest">
             <Check aria-hidden className="h-7 w-7 shrink-0" strokeWidth={3} />
             {ui("listed", lang)}
           </p>
@@ -302,7 +302,7 @@ export default function FarmerPage() {
           <button
             type="button"
             onClick={startOver}
-            className="flex min-h-12 items-center justify-center gap-2 border-2 border-ink bg-paper text-lg font-semibold text-ink"
+            className="flex min-h-12 items-center justify-center gap-2 border-2 border-forest bg-paper text-lg font-semibold text-forest"
           >
             <Plus aria-hidden className="h-5 w-5" strokeWidth={2.5} />
             {ui("newListing", lang)}
@@ -317,12 +317,12 @@ export default function FarmerPage() {
                 onClick={() => speak(ui("example", lang))}
                 disabled={busy}
                 aria-label={`${ui("exampleTitle", lang)}: ${ui("listen", lang)}`}
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-ink bg-paper text-ink disabled:opacity-60"
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-forest bg-paper text-forest disabled:opacity-60"
               >
                 <Volume2 aria-hidden className="h-5 w-5" strokeWidth={2.25} />
               </button>
-              <p className="text-lg leading-snug text-ink">
-                <span className="block text-base text-ink-soft">{ui("exampleTitle", lang)}</span>“{ui("example", lang)}”
+              <p className="text-lg leading-snug text-soil">
+                <span className="block text-base text-soil-soft">{ui("exampleTitle", lang)}</span>“{ui("example", lang)}”
               </p>
             </section>
           )}
@@ -334,7 +334,7 @@ export default function FarmerPage() {
             onTapField={!isEmpty || tapToFill ? askForField : undefined}
           />
 
-          {tapToFill && <p className="font-semibold text-bahi">{ui("tapField", lang)}</p>}
+          {tapToFill && <p className="font-semibold text-terracotta-text">{ui("tapField", lang)}</p>}
 
           {reply && (
             <section className="flex items-start gap-3" aria-live="polite">
@@ -343,25 +343,25 @@ export default function FarmerPage() {
                 onClick={() => speak(reply)}
                 disabled={busy}
                 aria-label={ui("replay", lang)}
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-bahi bg-paper text-bahi disabled:opacity-60"
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-terracotta bg-paper text-terracotta-text disabled:opacity-60"
               >
                 <Volume2 aria-hidden className="h-5 w-5" strokeWidth={2.25} />
               </button>
-              <p className="pt-1.5 text-xl leading-snug text-ink">{reply}</p>
+              <p className="pt-1.5 text-xl leading-snug text-soil">{reply}</p>
             </section>
           )}
 
           {micBlocked && (
             <section className="ledger flex flex-col gap-3 rounded-sm py-4 pl-12 pr-4" role="alert">
-              <p className="font-ledger text-xl text-bahi">{ui("micGuideTitle", lang)}</p>
-              <div className="flex items-center gap-3 text-ink" aria-hidden>
+              <p className="font-ledger text-xl text-forest">{ui("micGuideTitle", lang)}</p>
+              <div className="flex items-center gap-3 text-soil" aria-hidden>
                 <Lock className="h-8 w-8" strokeWidth={2} />
-                <span className="text-2xl text-ink-soft">›</span>
+                <span className="text-2xl text-soil-soft">›</span>
                 <Mic className="h-8 w-8" strokeWidth={2} />
-                <span className="text-2xl text-ink-soft">›</span>
-                <Check className="h-8 w-8 text-field" strokeWidth={2.5} />
+                <span className="text-2xl text-soil-soft">›</span>
+                <Check className="h-8 w-8 text-forest" strokeWidth={2.5} />
               </div>
-              <p className="text-lg leading-snug">{ui("micGuide", lang)}</p>
+              <p className="text-lg leading-snug text-soil">{ui("micGuide", lang)}</p>
             </section>
           )}
 
@@ -379,10 +379,10 @@ export default function FarmerPage() {
                 onChange={(e) => setTyped(e.target.value)}
                 placeholder={ui("placeholder", lang)}
                 aria-label={ui("type", lang)}
-                className="min-w-0 flex-1 border-2 border-ink bg-paper px-3 py-3"
+                className="min-w-0 flex-1 border-2 border-forest bg-paper px-3 py-3"
                 style={{ fontSize: 18 }}
               />
-              <button type="submit" className="min-h-12 bg-ink px-4 text-lg font-semibold text-paper">
+              <button type="submit" className="min-h-12 bg-forest px-4 text-lg font-semibold text-paper">
                 {ui("send", lang)}
               </button>
             </form>
@@ -391,33 +391,33 @@ export default function FarmerPage() {
       )}
 
       <section className="mt-3 flex flex-col gap-3" aria-label={ui("orders", lang)}>
-        <h2 className="font-ledger text-2xl text-bahi">{ui("orders", lang)}</h2>
-        {notifications.length === 0 && <p className="text-ink-soft">{ui("noOrders", lang)}</p>}
+        <h2 className="font-ledger text-2xl text-forest">{ui("orders", lang)}</h2>
+        {notifications.length === 0 && <p className="text-soil-soft">{ui("noOrders", lang)}</p>}
         {notifications.map((n) => (
           <article key={n.id} className="ledger flex flex-col gap-3 rounded-sm py-4 pl-12 pr-4">
             <div className="flex items-start justify-between gap-3">
               {n.farmerTotal !== undefined && (
                 <p>
-                  <span className="block text-base text-ink-soft">{ui("youGet", lang)}</span>
-                  <span className="double-rule inline-block pb-0.5 text-[2rem] font-bold leading-tight text-field tabular-nums">
+                  <span className="block text-base text-soil-soft">{ui("youGet", lang)}</span>
+                  <span className="double-rule inline-block pb-0.5 text-[2rem] font-bold leading-tight text-forest tabular-nums">
                     {inr(n.farmerTotal)}
                   </span>
                 </p>
               )}
               {!n.heard && n.facts && (
-                <span className="flex items-center gap-1 text-base font-semibold text-bahi">
+                <span className="flex items-center gap-1 text-base font-semibold text-terracotta-text">
                   <BellRing aria-hidden className="h-5 w-5" strokeWidth={2.25} />
                   {ui("newOrder", lang)}
                 </span>
               )}
             </div>
-            <p className="text-lg leading-snug">{orderText(n)}</p>
+            <p className="text-lg leading-snug text-soil">{orderText(n)}</p>
             <button
               type="button"
               onClick={() => listen(n)}
               disabled={busy}
               aria-label={`${ui("listen", lang)}: ${n.farmerTotal !== undefined ? inr(n.farmerTotal) : orderText(n).slice(0, 40)}`}
-              className="flex min-h-12 items-center justify-center gap-2 bg-ink text-lg font-semibold text-paper disabled:opacity-60"
+              className="flex min-h-12 items-center justify-center gap-2 bg-forest text-lg font-semibold text-paper disabled:opacity-60"
             >
               <Volume2 aria-hidden className="h-5 w-5" strokeWidth={2.25} />
               {ui("listen", lang)}
@@ -428,12 +428,12 @@ export default function FarmerPage() {
 
       {/* Fixed in thumb reach: the one action that matters right now. */}
       {!listedId && (
-        <div className="fixed inset-x-0 bottom-0 z-10 border-t-2 border-bahi bg-page/95 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-10 border-t-2 border-terracotta bg-page/95 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur">
           <div className="mx-auto flex max-w-md flex-col items-center gap-2 px-4">
             {complete ? (
               <>
                 {busy && (
-                  <p className="text-base font-semibold text-ink" aria-live="polite">
+                  <p className="text-base font-semibold text-forest" aria-live="polite">
                     {micLabel}
                   </p>
                 )}
@@ -442,7 +442,7 @@ export default function FarmerPage() {
                     type="button"
                     onClick={confirmNow}
                     disabled={mic === "thinking" || mic === "recording"}
-                    className="flex min-h-14 items-center justify-center gap-2 bg-field text-xl font-bold text-paper disabled:opacity-60"
+                    className="flex min-h-14 items-center justify-center gap-2 bg-forest text-xl font-bold text-paper disabled:opacity-60"
                   >
                     <Check aria-hidden className="h-6 w-6" strokeWidth={3} />
                     {ui("confirm", lang)}
@@ -451,7 +451,7 @@ export default function FarmerPage() {
                     type="button"
                     onClick={redoAll}
                     disabled={mic === "thinking"}
-                    className="flex min-h-14 items-center justify-center gap-2 border-2 border-ink bg-paper text-lg font-semibold text-ink disabled:opacity-60"
+                    className="flex min-h-14 items-center justify-center gap-2 border-2 border-forest bg-paper text-lg font-semibold text-forest disabled:opacity-60"
                   >
                     <RotateCcw aria-hidden className="h-5 w-5" strokeWidth={2.5} />
                     {ui("retryAll", lang)}
@@ -465,7 +465,7 @@ export default function FarmerPage() {
                   <button
                     type="button"
                     onClick={() => setMomentId(unheard[0].id)}
-                    className="flex min-h-11 items-center gap-2 bg-bahi px-4 text-base font-semibold text-paper"
+                    className="flex min-h-11 items-center gap-2 bg-terracotta-text px-4 text-base font-semibold text-paper"
                   >
                     <BellRing aria-hidden className="h-5 w-5" strokeWidth={2.25} />
                     {unheard.length} {ui("newOrders", lang)}
@@ -475,7 +475,7 @@ export default function FarmerPage() {
                   type="button"
                   onClick={() => setShowKeyboard((s) => !s)}
                   aria-pressed={showKeyboard}
-                  className="flex min-h-11 items-center gap-2 px-3 text-base text-ink-soft underline underline-offset-4"
+                  className="flex min-h-11 items-center gap-2 px-3 text-base text-soil-soft underline underline-offset-4"
                 >
                   <Keyboard aria-hidden className="h-5 w-5" strokeWidth={2} />
                   {ui("type", lang)}
@@ -493,25 +493,25 @@ export default function FarmerPage() {
           className="fixed inset-0 z-30 flex flex-col justify-center bg-page px-4"
         >
           <div className="ledger mx-auto flex w-full max-w-md flex-col gap-4 rounded-sm py-8 pl-14 pr-6">
-            <p className="flex items-center gap-2 text-lg font-semibold text-bahi">
+            <p className="flex items-center gap-2 text-lg font-semibold text-terracotta-text">
               <BellRing aria-hidden className="h-6 w-6" strokeWidth={2.25} />
               {ui("newOrder", lang)}
             </p>
-            <p className="text-2xl font-bold text-ink">
+            <p className="text-2xl font-bold text-forest">
               {moment.facts.kg} {ui("kg", lang)} {cropName(moment.facts.crop, lang)}
             </p>
             <div>
-              <p className="text-lg text-ink-soft">{ui("youGet", lang)}</p>
-              <p className="double-rule inline-block pb-1 text-6xl font-bold leading-none text-field tabular-nums">
+              <p className="text-lg text-soil-soft">{ui("youGet", lang)}</p>
+              <p className="double-rule inline-block pb-1 text-6xl font-bold leading-none text-forest tabular-nums">
                 {inr(moment.facts.total)}
               </p>
             </div>
-            <p className="text-lg text-ink">
-              <span className="text-ink-soft">{ui("boughtBy", lang)}: </span>
+            <p className="text-lg text-soil">
+              <span className="text-soil-soft">{ui("boughtBy", lang)}: </span>
               {buyerInScript(moment.facts.buyerId, moment.facts.buyerName, lang)}
             </p>
-            <p className="text-lg text-ink">
-              <span className="text-ink-soft">{ui("pickup", lang)}: </span>
+            <p className="text-lg text-soil">
+              <span className="text-soil-soft">{ui("pickup", lang)}: </span>
               {formatDate(moment.facts.pickupDate, lang)}
             </p>
             <div className="mt-2 grid grid-cols-[1fr_1.4fr] gap-4">
@@ -521,7 +521,7 @@ export default function FarmerPage() {
                 onClick={playMoment}
                 disabled={busy}
                 className={`flex min-h-14 items-center justify-center gap-2 text-lg font-semibold disabled:opacity-60 ${
-                  momentHeard ? "border-2 border-ink bg-paper text-ink" : "bg-ink text-paper"
+                  momentHeard ? "border-2 border-forest bg-paper text-forest" : "bg-forest text-paper"
                 }`}
               >
                 <Volume2 aria-hidden className="h-6 w-6" strokeWidth={2.25} />
@@ -531,7 +531,7 @@ export default function FarmerPage() {
                 type="button"
                 onClick={closeMoment}
                 disabled={!momentHeard || busy}
-                className="flex min-h-14 items-center justify-center gap-2 bg-field text-xl font-bold text-paper disabled:opacity-40"
+                className="flex min-h-14 items-center justify-center gap-2 bg-forest text-xl font-bold text-paper disabled:opacity-40"
               >
                 <Check aria-hidden className="h-6 w-6" strokeWidth={3} />
                 {ui("ok", lang)}
