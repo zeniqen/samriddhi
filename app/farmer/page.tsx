@@ -4,6 +4,7 @@ import { BellRing, Check, Keyboard, Lock, Mic, Plus, RotateCcw, Volume2 } from "
 import { useCallback, useEffect, useRef, useState } from "react";
 import { inr, ListingCard } from "@/components/ListingCard";
 import { MicButton, type MicState } from "@/components/MicButton";
+import { LiquidGlass } from "@/components/ui/liquid-glass";
 import { playReply, startRecording, stopReply } from "@/lib/audio-client";
 import { buyerInScript, readBackVars } from "@/lib/readback";
 import { cropName, formatDate, t, type TemplateKey } from "@/lib/templates";
@@ -481,8 +482,19 @@ export default function FarmerPage() {
 
       {/* Fixed in thumb reach: the one action that matters right now. */}
       {!listedId && (
-        <div className="fixed inset-x-0 bottom-0 z-10 rounded-t-[2rem] bg-surface/95 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-1px_0_var(--line),0_-16px_40px_-24px_rgb(35_71_53/0.4)] backdrop-blur">
-          <div className="mx-auto flex max-w-md flex-col items-center gap-2 px-4">
+        // Floating liquid-glass dock: the cards behind it bend through the rim. Tint is raised from the
+        // demo's 0.12 so labels stay readable for the farmer over whatever scrolls underneath.
+        <div className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-10 mx-auto max-w-md">
+          <LiquidGlass
+            radius={32}
+            scale={48}
+            aberration={14}
+            bevelDepth={24}
+            frost={0.4}
+            tint={0.6}
+            className="shadow-[0_12px_40px_rgb(35_71_53/0.25),inset_0_1px_0_rgb(255_255_255/0.5)] dark:bg-white/70"
+            contentClassName="flex flex-col items-center gap-2 px-4 py-4"
+          >
             {complete ? (
               <>
                 {busy && (
@@ -539,7 +551,7 @@ export default function FarmerPage() {
                 </div>
               </>
             )}
-          </div>
+          </LiquidGlass>
         </div>
       )}
 
