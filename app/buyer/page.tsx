@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { cropEn } from "@/lib/crops";
 import { PriceSplit } from "@/components/PriceSplit";
 import type { BuyerOrderRow } from "@/lib/buyer-orders";
 import { orderTotals } from "@/lib/pricing";
@@ -16,7 +17,6 @@ const fmtDate = (iso: string) =>
   }).format(new Date(`${iso}T00:00:00Z`));
 const inr = (n: number) =>
   `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
-const title = (s: string) => s[0].toUpperCase() + s.slice(1);
 
 export default function BuyerPage() {
   const [listings, setListings] = useState<Row[]>([]);
@@ -119,7 +119,7 @@ export default function BuyerPage() {
             Samriddhi
           </p>
           <h1 className="mt-2 text-lg text-soil">
-            Tomatoes from Ludhiana farms, priced in the open
+            Fresh produce from Ludhiana farms, priced in the open
           </h1>
         </div>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-soil-soft">
@@ -191,6 +191,10 @@ export default function BuyerPage() {
                           aria-pressed={isSelected}
                           className="text-left"
                         >
+                          {/* Narrow screens hide the Crop column, so the crop leads the row. */}
+                          <span className="block text-sm font-semibold text-terracotta-text sm:hidden">
+                            {cropEn(l.crop)}
+                          </span>
                           <span className="block font-semibold text-forest">
                             {l.farmerName}
                           </span>
@@ -203,7 +207,7 @@ export default function BuyerPage() {
                         </button>
                       </td>
                       <td className="hidden py-3.5 text-soil sm:table-cell">
-                        {title(l.crop)}
+                        {cropEn(l.crop)}
                       </td>
                       <td className="figure py-3.5 text-right text-soil">
                         {l.remainingKg}
@@ -241,7 +245,7 @@ export default function BuyerPage() {
                     {selected.farmerName}
                   </h2>
                   <p className="mt-1 text-soil">
-                    {title(selected.crop)} from {selected.village},{" "}
+                    {cropEn(selected.crop)} from {selected.village},{" "}
                     {selected.remainingKg} kg left, pickup{" "}
                     {fmtDate(selected.pickupDate)}
                   </p>
@@ -338,7 +342,7 @@ export default function BuyerPage() {
                   >
                     <div className="min-w-0">
                       <p className="font-semibold text-forest">
-                        {o.kg} kg {o.crop ?? "produce"} from {o.farmerName}
+                        {o.kg} kg {o.crop ? cropEn(o.crop).toLowerCase() : "produce"} from {o.farmerName}
                       </p>
                       <p className="text-sm text-soil-soft">
                         {o.village ? `${o.village}, ` : ""}

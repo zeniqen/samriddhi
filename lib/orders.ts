@@ -1,4 +1,5 @@
 import { computeSplit, orderTotals } from "./pricing";
+import { cropEn } from "./crops";
 import type { Store } from "./store";
 import { buyerInScript } from "./readback";
 import { cropName, formatDate, t } from "./templates";
@@ -17,7 +18,7 @@ type Result = { ok: true; order: Order } | { ok: false; status: 400 | 404 | 409;
 export function templateConfirmation({ order, listing, buyer, farmer }: Parameters<ConfirmFn>[0]) {
   const { farmerTotal } = orderTotals(order.split, order.quantityKg);
   return {
-    textEnglish: `${buyer.name} bought ${order.quantityKg} kg ${listing.crop} at ₹${order.split.farmerPerKg}/kg. You receive ₹${farmerTotal}. Pickup ${listing.pickupDate}.`,
+    textEnglish: `${buyer.name} bought ${order.quantityKg} kg ${cropEn(listing.crop).toLowerCase()} at ₹${order.split.farmerPerKg}/kg. You receive ₹${farmerTotal}. Pickup ${listing.pickupDate}.`,
     textLocal: t("orderConfirmed", farmer.lang, {
       buyer: buyerInScript(buyer.id, buyer.name, farmer.lang),
       kg: order.quantityKg,

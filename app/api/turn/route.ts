@@ -8,6 +8,7 @@ import { getStore } from "@/lib/store";
 import { findVillageInNative } from "@/lib/validate";
 import { readBackVars, villageInScript } from "@/lib/readback";
 import { findDateInNative } from "@/lib/fallback-parser";
+import { findCropInNative } from "@/lib/crops";
 import { t } from "@/lib/templates";
 import type { ConversationState, Lang, Listing } from "@/lib/types";
 
@@ -92,6 +93,8 @@ export async function POST(req: Request) {
   const overrides: ConversationState["fields"] = {};
   const nativeVillage = findVillageInNative(original);
   const nativeDate = findDateInNative(original, today);
+  const nativeCrop = findCropInNative(original);
+  if (nativeCrop) overrides.crop = nativeCrop;
   if (nativeVillage) overrides.village = nativeVillage;
   if (nativeDate) overrides.pickupDate = nativeDate;
   state = { ...state, fields: { ...state.fields, ...overrides } };

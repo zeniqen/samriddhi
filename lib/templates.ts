@@ -1,6 +1,7 @@
 // Fixed sentences the farmer hears when the AI reply fails the fact-check
 // or a provider is down. Punjabi copy needs a proofread by a native speaker.
 import type { Crop, Lang, ListingFields } from "./types";
+import { cropInLang } from "./crops";
 
 export const TEMPLATE_KEYS = [
   "askAgain",
@@ -33,18 +34,12 @@ const COPY: Record<TemplateKey, Record<Lang, string>> = {
   },
 };
 
-const CROP_NAMES: Record<Crop, Record<Lang, string>> = {
-  tomato: { hi: "टमाटर", pa: "ਟਮਾਟਰ" },
-  onion: { hi: "प्याज़", pa: "ਪਿਆਜ਼" },
-  potato: { hi: "आलू", pa: "ਆਲੂ" },
-};
-
 export function t(key: TemplateKey, lang: Lang, vars: Record<string, string | number> = {}): string {
   return COPY[key][lang].replace(/\{(\w+)\}/g, (whole, name) => (name in vars ? String(vars[name]) : whole));
 }
 
 export function cropName(crop: Crop, lang: Lang): string {
-  return CROP_NAMES[crop][lang];
+  return cropInLang(crop, lang);
 }
 
 // Our own month names: browsers differ (Chrome has no Punjabi months and prints "M11 8").

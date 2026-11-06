@@ -1,6 +1,7 @@
 import { daysBetween } from "./dates";
-import { CROPS, VILLAGE_NATIVE, VILLAGES } from "./seed-data";
-import type { Crop, ListingFields } from "./types";
+import { CROP_WORDS, normaliseCrop } from "./crops";
+import { VILLAGE_NATIVE, VILLAGES } from "./seed-data";
+import type { ListingFields } from "./types";
 
 export const LIMITS = { minKg: 1, maxKg: 10_000, minPrice: 1, maxPrice: 200, maxDaysAhead: 14 } as const;
 
@@ -56,13 +57,8 @@ function plausiblePlace(raw: string): string | null {
   const words = raw.trim().replace(/\b(village|pind|gaon|gram)\b/gi, " ").split(/\s+/).filter(Boolean);
   if (words.length === 0 || words.length > 3) return null;
   if (!words.every((w) => /^[A-Za-z][A-Za-z'-]{1,}$/.test(w))) return null;
-  if (words.some((w) => NOT_A_PLACE.has(w.toLowerCase()))) return null;
+  if (words.some((w) => NOT_A_PLACE.has(w.toLowerCase()) || CROP_WORDS.has(w.toLowerCase()))) return null;
   return words.map((w) => w[0].toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-}
-
-function normaliseCrop(raw: string): Crop | null {
-  const c = raw.toLowerCase().trim().replace(/(es|s)$/, "");
-  return (CROPS as string[]).includes(c) ? (c as Crop) : null;
 }
 
 const inRange = (n: unknown, min: number, max: number): n is number =>

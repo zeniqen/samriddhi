@@ -1,6 +1,7 @@
 // Rule-based extractor used when the LLM is slow, down, or returns junk.
 // Input is the English text Sarvam produced from the farmer's speech.
 import { addDays } from "./dates";
+import { CROP_WORDS, findCropInEnglish } from "./crops";
 import { normaliseNumbers } from "./number-words";
 import { matchVillage } from "./validate";
 import type { Crop, ListingFields } from "./types";
@@ -34,11 +35,7 @@ function findQuantity(text: string): number | undefined {
   return isQuintal(m[2]) ? Number(m[1]) * 100 : Number(m[1]);
 }
 
-function findCrop(text: string): Crop | undefined {
-  const m = text.match(/\b(tomato(?:es)?|onions?|potato(?:es)?)\b/);
-  if (!m) return undefined;
-  return m[1].replace(/(es|s)$/, "") as Crop;
-}
+const findCrop = (text: string): Crop | undefined => findCropInEnglish(text);
 
 function findDate(text: string, today: string): string | undefined {
   if (/\bday after tomorrow\b/.test(text)) return addDays(today, 2);
@@ -51,7 +48,7 @@ const NOT_VILLAGES = new Set(["tomato", "tomatoes", "onion", "onions", "potato",
 
 function findVillage(text: string): string | undefined {
   for (const word of text.split(/[^a-z]+/)) {
-    if (word.length < 5 || NOT_VILLAGES.has(word)) continue;
+    if (word.length < 5 || NOT_VILLAGES.has(word) || CROP_WORDS.has(word)) continue;
     const v = matchVillage(word);
     if (v) return v;
   }

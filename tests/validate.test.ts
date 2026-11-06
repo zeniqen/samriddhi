@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { CROPS } from "@/lib/crops";
 import { addDays, todayIST } from "@/lib/dates";
 import { findVillageInNative, matchVillage, validateUpdates } from "@/lib/validate";
 import { SEED_BUYERS, SEED_FARMERS, SEED_LISTINGS } from "@/lib/seed-data";
@@ -38,7 +39,7 @@ describe("validateUpdates", () => {
 
   test("rejects unknown crop and past date", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const r = validateUpdates({ crop: "mango" as any, pickupDate: "2026-11-05" }, "2026-11-06");
+    const r = validateUpdates({ crop: "broccoli" as any, pickupDate: "2026-11-05" }, "2026-11-06");
     expect(r.accepted).toEqual({});
   });
 
@@ -49,12 +50,12 @@ describe("validateUpdates", () => {
 });
 
 describe("seed data", () => {
-  test("has 5 farmers (3 hi, 2 pa), 3 buyers, 8 tomato listings", () => {
+  test("has 5 farmers (3 hi, 2 pa), 3 buyers, 8 listings of known crops", () => {
     expect(SEED_FARMERS).toHaveLength(5);
     expect(SEED_FARMERS.filter((f) => f.lang === "hi")).toHaveLength(3);
     expect(SEED_BUYERS).toHaveLength(3);
     expect(SEED_LISTINGS).toHaveLength(8);
-    expect(SEED_LISTINGS.every((l) => l.crop === "tomato")).toBe(true);
+    expect(SEED_LISTINGS.every((l) => CROPS.includes(l.crop))).toBe(true);
   });
 });
 

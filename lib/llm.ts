@@ -12,7 +12,7 @@ const TURN_SCHEMA = {
     updates: {
       type: "object",
       properties: {
-        crop: { type: "string", enum: ["tomato", "onion", "potato"] },
+        crop: { type: "string" }, // any crop; checked against the catalogue after the turn
         quantityKg: { type: "number" },
         askPricePerKg: { type: "number" },
         village: { type: "string" },
@@ -62,7 +62,7 @@ export function buildSystemPrompt(today: string, fields: ListingFields): string 
   return [
     "You help an Indian farmer who cannot read list produce for sale, by voice. Your reply is translated and read aloud.",
     `Today is ${today}. Fields already collected: ${JSON.stringify(fields)}. Never ask again for a collected field.`,
-    "Fields: crop (tomato|onion|potato), quantityKg, askPricePerKg (rupees per kg), village, pickupDate (YYYY-MM-DD).",
+    "Fields: crop (the crop's common English name, singular, e.g. tomato, carrot, radish, cauliflower, kinnow, wheat), quantityKg, askPricePerKg (rupees per kg), village, pickupDate (YYYY-MM-DD).",
     "Convert units: 1 quintal = 100 kg; a price per quintal is divided by 100. Resolve 'tomorrow'/'day after tomorrow' from today.",
     "Put only what the farmer actually said in updates. Never invent or guess a number, place or date.",
     "replyEnglish: one short, warm, simple sentence in English. Ask for at most ONE missing field. No emojis.",

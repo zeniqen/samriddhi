@@ -16,8 +16,6 @@ export const VILLAGE_NATIVE: Record<string, string[]> = {
   Payal: ["पायल", "ਪਾਇਲ"],
 };
 
-export const CROPS: Crop[] = ["tomato", "onion", "potato"];
-
 export const SEED_FARMERS: Farmer[] = [
   { id: "f1", name: "Ramesh Kumar", village: "Dakha", lang: "hi", phone: "+91 90000 00001" },
   { id: "f2", name: "Sunita Devi", village: "Sahnewal", lang: "hi", phone: "+91 90000 00002" },
@@ -37,23 +35,23 @@ export const SEED_BUYERS: Buyer[] = [
 
 /** Built fresh so pickup dates stay in the future whatever day the demo runs. */
 export function buildSeedListings(today: string = todayIST()): Listing[] {
-  const rows: [string, string, number, number, number][] = [
-    // id, farmerId, kg, ₹/kg, pickup in N days
-    ["l1", "f1", 300, 14, 1],
-    ["l2", "f2", 150, 15, 2],
-    ["l3", "f3", 200, 12, 1],
-    ["l4", "f4", 250, 16, 3],
-    ["l5", "f5", 100, 18, 2],
-    ["l6", "f1", 80, 13, 4],
-    ["l7", "f3", 120, 17, 3],
-    ["l8", "f4", 50, 15, 1],
+  const rows: [string, string, Crop, number, number, number][] = [
+    // id, farmerId, crop, kg, ₹/kg, pickup in N days
+    ["l1", "f1", "tomato", 300, 14, 1],
+    ["l2", "f2", "cauliflower", 150, 15, 2],
+    ["l3", "f3", "potato", 200, 12, 1],
+    ["l4", "f4", "kinnow", 250, 22, 3],
+    ["l5", "f5", "carrot", 100, 18, 2],
+    ["l6", "f1", "radish", 80, 10, 4],
+    ["l7", "f3", "tomato", 120, 17, 3],
+    ["l8", "f4", "spinach", 50, 15, 1],
   ];
-  return rows.map(([id, farmerId, kg, price, inDays], i) => {
+  return rows.map(([id, farmerId, crop, kg, price, inDays], i) => {
     const farmer = SEED_FARMERS.find((f) => f.id === farmerId)!;
     return {
       id,
       farmerId,
-      crop: "tomato",
+      crop,
       quantityKg: kg,
       remainingKg: kg,
       askPricePerKg: price,

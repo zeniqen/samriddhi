@@ -1,5 +1,6 @@
 export type Lang = "hi" | "pa";
-export type Crop = "tomato" | "onion" | "potato";
+import type { Crop } from "./crops";
+export type { Crop };
 
 export type ListingFields = {
   crop?: Crop;
