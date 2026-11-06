@@ -104,3 +104,19 @@ export function parseFallback(english: string, today: string): ListingFields {
   if (pickupDate) out.pickupDate = pickupDate;
   return out;
 }
+
+// Relative-date words as spoken. Pickup is always in the future, so कल / ਕੱਲ੍ਹ (yesterday OR tomorrow) means tomorrow.
+const NATIVE_DATE_WORDS: [string[], number][] = [
+  [["परसों", "परसो", "ਪਰਸੋਂ", "ਪਰਸੋ"], 2],
+  [["कल", "ਕੱਲ੍ਹ", "ਕੱਲ", "ਕਲ", "ਭਲਕੇ"], 1],
+  [["आज", "ਅੱਜ"], 0],
+];
+
+/** Pickup date from the original Hindi/Punjabi words — deterministic, so it beats the LLM. */
+export function findDateInNative(transcript: string, today: string): string | undefined {
+  const words = new Set(transcript.split(/[\s,।.!?]+/).filter(Boolean));
+  for (const [spellings, days] of NATIVE_DATE_WORDS) {
+    if (spellings.some((s) => words.has(s))) return addDays(today, days);
+  }
+  return undefined;
+}

@@ -20,3 +20,17 @@ test.each([
 ])("%s", (s, expected) => {
   expect(parseFallback(s, "2026-11-06")).toEqual(expected);
 });
+
+import { findDateInNative } from "@/lib/fallback-parser";
+
+test.each([
+  ["गाँव दाखा, परसों पिकअप", "2026-11-08"],
+  ["कल उठा लो", "2026-11-07"],
+  ["आज ले जाओ", "2026-11-06"],
+  ["ਪਰਸੋਂ ਪਿਕਅੱਪ", "2026-11-08"],
+  ["ਕੱਲ੍ਹ ਲੈ ਜਾਓ", "2026-11-07"],
+  ["ਭਲਕੇ", "2026-11-07"],
+  ["सौ किलो टमाटर", undefined],
+])("native date: %s", (s, expected) => {
+  expect(findDateInNative(s, "2026-11-06")).toBe(expected);
+});

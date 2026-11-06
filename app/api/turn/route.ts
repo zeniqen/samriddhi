@@ -6,6 +6,7 @@ import { localize } from "@/lib/localize";
 import { speechToEnglish, translateFromEnglish, translateToEnglish } from "@/lib/sarvam";
 import { getStore } from "@/lib/store";
 import { findVillageInNative } from "@/lib/validate";
+import { findDateInNative } from "@/lib/fallback-parser";
 import { cropName, formatDate, t } from "@/lib/templates";
 import type { ConversationState, Lang, Listing } from "@/lib/types";
 
@@ -87,28 +88,36 @@ export async function POST(req: Request) {
   // Read-back already heard? Must be decided before this turn adds anything.
   const wasComplete = isComplete(state);
 
-  // Translation can garble village names ("गाँव दाखा" → "Show it to the village"); the original keeps them.
+  // Rules beat the LLM where the original words are unambiguous: translation garbles village names
+  // ("गाँव दाखा" → "Show it to the village") and the LLM sometimes miscounts परसों (day after tomorrow).
+  const overrides: ConversationState["fields"] = {};
   const nativeVillage = findVillageInNative(original);
-  if (nativeVillage) state = { ...state, fields: { ...state.fields, village: nativeVillage } };
+  const nativeDate = findDateInNative(original, today);
+  if (nativeVillage) overrides.village = nativeVillage;
+  if (nativeDate) overrides.pickupDate = nativeDate;
+  state = { ...state, fields: { ...state.fields, ...overrides } };
 
   const r = await runTurn(state, english, { llm: llmTurn, today });
   state = {
     ...r.state,
-    fields: nativeVillage ? { ...r.state.fields, village: nativeVillage } : r.state.fields,
+    fields: { ...r.state.fields, ...overrides },
     transcriptOriginal: [state.transcriptOriginal, original].filter(Boolean).join(" | "),
   };
+  const complete = isComplete(state);
 
   // Spoken "yes" after the read-back
-  if (wasComplete && r.intent === "confirm" && r.complete) {
+  if (wasComplete && r.intent === "confirm" && complete) {
     const listing = await createListing(state);
     return respond(t("listingLive", lang), r.replyEnglish, { listingId: listing.id });
   }
 
-  if (r.complete) {
+  if (complete) {
     const f = state.fields as Required<ConversationState["fields"]>;
     const allowed = allowedNumbers({ quantityKg: f.quantityKg, pricePerKg: f.askPricePerKg, pickupDate: f.pickupDate });
-    // A read-back must state kg and price; otherwise use the fixed sentence.
-    const reply = mentionsAll(r.replyEnglish, [f.quantityKg, f.askPricePerKg]) ? r.replyEnglish : "";
+    // A read-back must state kg, price, pickup day and the village; otherwise use the fixed sentence.
+    const day = Number(f.pickupDate.slice(8));
+    const statesAll = mentionsAll(r.replyEnglish, [f.quantityKg, f.askPricePerKg, day]) && r.replyEnglish.includes(f.village);
+    const reply = statesAll ? r.replyEnglish : "";
     const loc = await localize(
       { replyEnglish: reply, lang, allowed, fallback: { key: "readBack", vars: readBackVars(state) } },
       { translate: translateFromEnglish },
