@@ -9,7 +9,7 @@ export async function GET() {
   const names = new Map(farmers.map((f) => [f.id, f.name]));
   return Response.json({
     listings: listings
-      .filter((l) => l.status !== "sold_out" && l.remainingKg > 0)
+      .filter((l) => l.status !== "sold_out" && l.status !== "removed" && l.remainingKg > 0)
       .map((l) => ({ ...l, split: computeSplit(l.askPricePerKg), farmerName: names.get(l.farmerId) ?? "Farmer" })),
     buyers,
     farmers,

@@ -25,7 +25,7 @@ export type Listing = Required<ListingFields> & {
   id: string;
   farmerId: string;
   remainingKg: number;
-  status: "live" | "verified" | "sold_out";
+  status: "live" | "verified" | "sold_out" | "removed";
   transcriptOriginal: string;
   transcriptEnglish: string;
   createdAt: string;

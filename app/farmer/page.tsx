@@ -1,6 +1,6 @@
 "use client";
 
-import { BellRing, Check, Keyboard, Lock, Mic, Plus, RotateCcw, Volume2 } from "lucide-react";
+import { BellRing, Check, Keyboard, Lock, Mic, Plus, RotateCcw, Trash2, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { inr, ListingCard } from "@/components/ListingCard";
 import { MicButton, type MicState } from "@/components/MicButton";
@@ -54,6 +54,8 @@ export default function FarmerPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [ready, setReady] = useState(false);
+  const [toDelete, setToDelete] = useState<Listing | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const stopRef = useRef<null | (() => Promise<Blob>)>(null);
 
   useEffect(() => {
@@ -220,6 +222,28 @@ export default function FarmerPage() {
     markHeard(n);
   };
 
+  const askDelete = (l: Listing) => {
+    setToDelete(l);
+    void speak(ui("deleteAsk", lang)); // the farmer may not read the question
+  };
+
+  const deleteListing = async () => {
+    if (!toDelete) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/listings/${toDelete.id}?farmerId=${farmerId}`, { method: "DELETE" });
+      if (res.ok || res.status === 404) setMyListings((ls) => ls.filter((l) => l.id !== toDelete.id));
+    } catch {}
+    stopReply();
+    setDeleting(false);
+    setToDelete(null);
+  };
+
+  const keepListing = () => {
+    stopReply();
+    setToDelete(null);
+  };
+
   /** Confirm and re-record stay live while the read-back plays: a tap stops the voice and acts. */
   const confirmNow = () => {
     speakSeq.current++; // the interrupted read-back must not flip the screen back to idle
@@ -379,8 +403,8 @@ export default function FarmerPage() {
           <h2 className="font-display text-xl font-semibold text-forest">{ui("myListings", lang)}</h2>
           <ul className="raised divide-y divide-line overflow-hidden rounded-2xl">
             {myListings.map((l) => (
-              <li key={l.id} className="flex items-center justify-between gap-4 px-4 py-3.5">
-                <div>
+              <li key={l.id} className="flex items-start gap-3 py-3.5 pl-4 pr-2">
+                <div className="flex-1 self-center">
                   <p className="font-display text-lg font-semibold text-forest">
                     {cropName(l.crop, lang)}, {l.remainingKg} {ui("kgLeft", lang)}
                   </p>
@@ -392,6 +416,14 @@ export default function FarmerPage() {
                   ₹{l.askPricePerKg}
                   <span className="text-sm font-normal text-soil-soft">{ui("perKg", lang)}</span>
                 </p>
+                <button
+                  type="button"
+                  onClick={() => askDelete(l)}
+                  aria-label={`${ui("deleteListing", lang)}: ${cropName(l.crop, lang)}`}
+                  className="-mt-1 grid h-11 w-11 shrink-0 place-items-center rounded-full text-red-600 transition-colors hover:bg-red-50 active:scale-95"
+                >
+                  <Trash2 aria-hidden className="h-5 w-5" strokeWidth={2.25} />
+                </button>
               </li>
             ))}
           </ul>
@@ -499,6 +531,51 @@ export default function FarmerPage() {
         </div>
       )}
 
+      {/* Delete check: the listing is named again so the farmer knows which one goes. */}
+      {toDelete && (
+        <div className="fixed inset-0 z-30 flex items-end justify-center bg-forest/40 p-3 sm:items-center" onClick={keepListing}>
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-ask"
+            onClick={(e) => e.stopPropagation()}
+            className="flex w-full max-w-md flex-col gap-5 rounded-3xl bg-surface p-6 shadow-[0_20px_60px_rgb(35_71_53/0.35)]"
+          >
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-red-50 text-red-600">
+              <Trash2 aria-hidden className="h-6 w-6" strokeWidth={2.25} />
+            </span>
+            <div>
+              <p id="delete-ask" className="font-display text-xl font-semibold leading-snug text-forest">
+                {ui("deleteAsk", lang)}
+              </p>
+              <p className="mt-2 text-lg text-soil">
+                {cropName(toDelete.crop, lang)}, {toDelete.remainingKg} {ui("kgLeft", lang)} · ₹{toDelete.askPricePerKg}
+                {ui("perKg", lang)}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                autoFocus
+                onClick={keepListing}
+                disabled={deleting}
+                className="flex min-h-14 items-center justify-center rounded-full border border-forest/25 text-lg font-semibold text-forest transition-colors hover:bg-sage-soft disabled:opacity-60"
+              >
+                {ui("deleteNo", lang)}
+              </button>
+              <button
+                type="button"
+                onClick={deleteListing}
+                disabled={deleting}
+                className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-red-600 text-lg font-bold text-white transition-transform active:scale-[0.98] disabled:opacity-60"
+              >
+                <Trash2 aria-hidden className="h-5 w-5" strokeWidth={2.5} />
+                {ui("deleteYes", lang)}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

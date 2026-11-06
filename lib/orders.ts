@@ -42,7 +42,7 @@ export async function placeOrder(
 
   const placed = await store.withListingLock(input.listingId, async (): Promise<Result & { listing?: Listing }> => {
     const listing = await store.getListing(input.listingId);
-    if (!listing) return { ok: false, status: 404, error: "Listing not found" };
+    if (!listing || listing.status === "removed") return { ok: false, status: 404, error: "Listing not found" };
     if (input.quantityKg > listing.remainingKg) {
       return { ok: false, status: 409, error: `Only ${listing.remainingKg} kg left` };
     }
