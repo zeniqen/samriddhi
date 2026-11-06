@@ -38,8 +38,16 @@ export async function localize(
     // …and the translator must not have added a number of its own.
     const sent = values.map((v) => Number(v.replace(/,/g, "")));
     if (!extractNumbers(text).every((n) => sent.includes(n))) return template();
-    return { text, usedTemplate: false };
+    return { text: neutralAddress(text), usedTemplate: false };
   } catch {
     return template();
   }
+}
+
+/**
+ * English "you" has no gender, so the translator guesses and often picks feminine (चाहेंगी).
+ * Farmers are addressed with the respectful plural, which fits anyone: चाहेंगे, ਚਾਹੋਗੇ.
+ */
+export function neutralAddress(text: string): string {
+  return text.replace(/(\S)ेंगी(?=[\s।?!,.]|$)/g, "$1ेंगे").replace(/(\S)ੋਗੀ(?=[\s।?!,.]|$)/g, "$1ੋਗੇ");
 }

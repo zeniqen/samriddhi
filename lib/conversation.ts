@@ -30,7 +30,8 @@ export async function runTurn(
   let usedFallback = false;
   try {
     turn = await deps.llm({ englishText: english, fields: state.fields, today: deps.today, history: state.history });
-  } catch {
+  } catch (e) {
+    console.error("[turn] LLM failed, using fallback parser:", e instanceof Error ? e.message : e);
     usedFallback = true;
     turn = { updates: parseFallback(english, deps.today), replyEnglish: "", intent: "fill" };
   }

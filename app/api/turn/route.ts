@@ -9,6 +9,7 @@ import { findVillageInNative } from "@/lib/validate";
 import { readBackVars, villageInScript } from "@/lib/readback";
 import { findDateInNative } from "@/lib/fallback-parser";
 import { findCropInNative } from "@/lib/crops";
+import { replyAsksFor } from "@/lib/reply-guard";
 import { t } from "@/lib/templates";
 import type { ConversationState, Lang, Listing } from "@/lib/types";
 
@@ -97,7 +98,8 @@ export async function POST(req: Request) {
   if (nativeCrop) overrides.crop = nativeCrop;
   if (nativeVillage) overrides.village = nativeVillage;
   if (nativeDate) overrides.pickupDate = nativeDate;
-  state = { ...state, fields: { ...state.fields, ...overrides } };
+  // Applied after the AI, not before: pre-filled fields made it think a repeated crop was a second
+  // listing ("which other crop?") and drop the kilos said in the same sentence.
 
   const r = await runTurn(state, english, { llm: llmTurn, today });
   state = {
@@ -135,10 +137,15 @@ export async function POST(req: Request) {
     return respond(loc.text, reply);
   }
 
+  // While filling, the AI must ask for the next missing field; otherwise the fixed question is used.
+  // A farmer's own question ("question" intent) still gets the AI's answer.
+  const nextKey = r.fallbackKey ?? "askAgain";
+  const onTrack = r.intent === "question" || replyAsksFor(r.replyEnglish, nextKey);
+  const question = onTrack ? r.replyEnglish : "";
   const loc = await localize(
     // Questions may only echo numbers the farmer has already given.
-    { replyEnglish: r.replyEnglish, lang, allowed: allowedFromFields(state.fields), fallback: { key: r.fallbackKey ?? "askAgain" } },
+    { replyEnglish: question, lang, allowed: allowedFromFields(state.fields), fallback: { key: nextKey } },
     { translate: translateFromEnglish },
   );
-  return respond(loc.text, r.replyEnglish);
+  return respond(loc.text, question);
 }

@@ -64,6 +64,7 @@ export function buildSystemPrompt(today: string, fields: ListingFields): string 
     `Today is ${today}. Fields already collected: ${JSON.stringify(fields)}. Never ask again for a collected field.`,
     "Fields: crop (the crop's common English name, singular, e.g. tomato, carrot, radish, cauliflower, kinnow, wheat), quantityKg, askPricePerKg (rupees per kg), village, pickupDate (YYYY-MM-DD).",
     "Convert units: 1 quintal = 100 kg; a price per quintal is divided by 100. Resolve 'tomorrow'/'day after tomorrow' from today.",
+    "There is only ONE listing. The farmer may repeat a collected field; that is fine: keep going and put every field they said in updates.",
     "Put only what the farmer actually said in updates. Never invent or guess a number, place or date.",
     "replyEnglish: one short, warm, simple sentence in English. Ask for at most ONE missing field. No emojis.",
     "Write numbers as digits. Say dates as day and month name (e.g. 8 November), never as 2026-11-08.",
