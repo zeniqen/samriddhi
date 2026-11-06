@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { placeOrder } from "@/lib/orders";
+import { placeOrder, templateConfirmation } from "@/lib/orders";
 import { createMemoryStore, type Store } from "@/lib/store";
 
 const NOW = new Date("2026-11-06T06:00:00Z");
@@ -78,4 +78,17 @@ test("listing with an unknown farmer still places the order without crashing", a
 test("notification carries the farmer's payout for the card", async () => {
   await placeOrder({ listingId: "l1", buyerId: "b1", quantityKg: 100 }, { store, confirm, now: NOW });
   expect((await store.listNotifications("f1"))[0].farmerTotal).toBe(1400);
+});
+
+test("notification carries order facts so the card can be re-rendered in any language", async () => {
+  await placeOrder({ listingId: "l1", buyerId: "b3", quantityKg: 10 }, { store, confirm, now: NOW });
+  expect((await store.listNotifications("f1"))[0].facts).toEqual({
+    buyerId: "b3", buyerName: "Sharma Kirana Store", crop: "tomato", kg: 10, pricePerKg: 14, total: 140, pickupDate: "2026-11-07",
+  });
+});
+
+test("fixed confirmation names the buyer in the farmer's script", async () => {
+  const r = await placeOrder({ listingId: "l1", buyerId: "b3", quantityKg: 10 }, { store, confirm: async (f) => templateConfirmation(f), now: NOW });
+  expect(r.ok).toBe(true);
+  expect((await store.listNotifications("f1"))[0].textLocal).toContain("शर्मा किराना स्टोर");
 });

@@ -6,27 +6,15 @@ import { localize } from "@/lib/localize";
 import { speechToEnglish, translateFromEnglish, translateToEnglish } from "@/lib/sarvam";
 import { getStore } from "@/lib/store";
 import { findVillageInNative } from "@/lib/validate";
-import { VILLAGE_NATIVE } from "@/lib/seed-data";
+import { readBackVars, villageInScript } from "@/lib/readback";
 import { findDateInNative } from "@/lib/fallback-parser";
-import { cropName, formatDate, t } from "@/lib/templates";
+import { t } from "@/lib/templates";
 import type { ConversationState, Lang, Listing } from "@/lib/types";
 
-/** English village name → its spelling in the farmer's script (index 0 Devanagari, last Gurmukhi). */
+/** English village name → its spelling in the farmer's script, protected during translation. */
 function villageNames(village: string, lang: Lang): Record<string, string> {
-  const spellings = VILLAGE_NATIVE[village];
-  if (!spellings) return {};
-  return { [village]: lang === "pa" ? spellings[spellings.length - 1] : spellings[0] };
-}
-
-function readBackVars(s: ConversationState) {
-  const f = s.fields as Required<ConversationState["fields"]>;
-  return {
-    kg: f.quantityKg,
-    crop: cropName(f.crop, s.lang),
-    price: f.askPricePerKg,
-    village: villageNames(f.village, s.lang)[f.village] ?? f.village,
-    date: formatDate(f.pickupDate, s.lang),
-  };
+  const native = villageInScript(village, lang);
+  return native === village ? {} : { [village]: native };
 }
 
 async function createListing(s: ConversationState): Promise<Listing> {
@@ -133,7 +121,7 @@ export async function POST(req: Request) {
         replyEnglish: reply,
         lang,
         allowed,
-        fallback: { key: "readBack", vars: readBackVars(state) },
+        fallback: { key: "readBack", vars: readBackVars(state.fields, lang) },
         names: villageNames(f.village, lang),
       },
       { translate: translateFromEnglish },

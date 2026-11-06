@@ -49,6 +49,16 @@ export type Notification = {
   textLocal: string;
   /** What the farmer receives, in rupees, shown large on the order card. */
   farmerTotal?: number;
+  /** Structured sale facts, so the card can be re-rendered in whichever language is on screen. */
+  facts?: {
+    buyerId: string;
+    buyerName: string;
+    crop: Crop;
+    kg: number;
+    pricePerKg: number;
+    total: number;
+    pickupDate: string;
+  };
   heard: boolean;
   createdAt: string;
 };

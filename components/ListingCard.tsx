@@ -1,5 +1,5 @@
 import { Mic } from "lucide-react";
-import { VILLAGE_NATIVE } from "@/lib/seed-data";
+import { villageInScript } from "@/lib/readback";
 import { cropName, formatDate } from "@/lib/templates";
 import { ui, type UiKey } from "@/lib/ui-copy";
 import type { Lang, ListingFields } from "@/lib/types";
@@ -14,25 +14,19 @@ const ROWS: Row[] = [
   { field: "pickupDate", label: "pickup", value: (f, l) => formatDate(f.pickupDate!, l) },
 ];
 
-/** Village in the farmer's own script: Dakha → दाखा / ਦਾਖਾ. */
-function villageInScript(village: string, lang: Lang): string {
-  const spellings = VILLAGE_NATIVE[village];
-  if (!spellings) return village;
-  return lang === "pa" ? spellings[spellings.length - 1] : spellings[0];
-}
-
 export const inr = (n: number) => `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
-/** The farmer's sale slip (parchi): each line inks in as it is heard; the page closes on the total. */
+/** The farmer's sale slip (parchi): each line inks in as it is heard; the page closes on the total.
+ *  With onTapField, any line (empty or filled) can be tapped to say just that line. */
 export function ListingCard({
   fields,
   lang,
-  onTapEmpty,
+  onTapField,
   disabled,
 }: {
   fields: ListingFields;
   lang: Lang;
-  onTapEmpty?: (field: keyof ListingFields) => void;
+  onTapField?: (field: keyof ListingFields) => void;
   disabled?: boolean;
 }) {
   const total =
@@ -51,15 +45,29 @@ export function ListingCard({
             <div key={row.field} className="grid grid-cols-[5.5rem_1fr] items-center border-t border-rule pl-12 pr-4">
               <dt className="py-3 text-base text-ink-soft">{ui(row.label, lang)}</dt>
               <dd className="py-1.5">
-                {filled ? (
-                  <span key={value} className="ink-in inline-block text-[1.65rem] font-bold leading-tight text-ink">
-                    {value}
-                  </span>
-                ) : onTapEmpty ? (
+                {filled && onTapField ? (
+                  // A filled line can be tapped to say just that line again.
                   <button
                     type="button"
                     disabled={disabled}
-                    onClick={() => onTapEmpty(row.field)}
+                    onClick={() => onTapField(row.field)}
+                    aria-label={`${ui(row.label, lang)}: ${value}. ${ui("retry", lang)}`}
+                    className="flex min-h-11 w-full items-center justify-between gap-2 text-left enabled:active:bg-sarson/25"
+                  >
+                    <span key={value} className="ink-in inline-block text-[1.65rem] font-bold leading-tight text-ink">
+                      {value}
+                    </span>
+                    <Mic aria-hidden className="h-5 w-5 shrink-0 text-ink-soft" strokeWidth={2} />
+                  </button>
+                ) : filled ? (
+                  <span key={value} className="ink-in inline-block text-[1.65rem] font-bold leading-tight text-ink">
+                    {value}
+                  </span>
+                ) : onTapField ? (
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => onTapField(row.field)}
                     aria-label={`${ui(row.label, lang)}: ${ui("speakHint", lang)}`}
                     className="flex min-h-11 w-full items-center gap-2 border-b-2 border-dashed border-ink-soft/60 text-left text-lg text-ink-soft enabled:active:bg-sarson/25"
                   >

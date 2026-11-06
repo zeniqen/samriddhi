@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { inr, ListingCard } from "@/components/ListingCard";
 import { MicButton, type MicState } from "@/components/MicButton";
 import { playReply, startRecording } from "@/lib/audio-client";
-import { t, type TemplateKey } from "@/lib/templates";
+import { buyerInScript, readBackVars } from "@/lib/readback";
+import { cropName, formatDate, t, type TemplateKey } from "@/lib/templates";
 import { ui } from "@/lib/ui-copy";
 import type { Lang, ListingFields, Notification } from "@/lib/types";
 
@@ -51,6 +52,10 @@ export default function FarmerPage() {
   const [listedId, setListedId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const stopRef = useRef<null | (() => Promise<Blob>)>(null);
+  // Browsers only allow sound after the person has touched the page once.
+  const interactedRef = useRef(false);
+  const shownRef = useRef(new Set<string>());
+  const [momentId, setMomentId] = useState<string | null>(null);
 
   useEffect(() => {
     // One-time sync from browser-only sources after hydration (server render can't see them).
@@ -59,23 +64,30 @@ export default function FarmerPage() {
     setFarmerId(new URLSearchParams(window.location.search).get("farmer") ?? "f1");
   }, []);
 
-  const switchLang = (l: Lang) => {
-    setLang(l);
-    setReply(""); // the last reply was spoken in the other language
-    try {
-      localStorage.setItem("samriddhi-lang", l);
-    } catch {}
-  };
-
   /** Play text aloud without replacing the AI's line (order cards, examples, guides). */
   const speak = useCallback(
-    async (text: string) => {
+    async (text: string, inLang: Lang = lang) => {
       setMic("speaking");
-      await playReply(text, lang);
+      await playReply(text, inLang);
       setMic("idle");
     },
     [lang],
   );
+
+  const switchLang = (l: Lang) => {
+    setLang(l);
+    try {
+      localStorage.setItem("samriddhi-lang", l);
+    } catch {}
+    if (complete) {
+      // Mid-confirm: read the same slip back in the new language, from our own fixed sentence.
+      const text = t("readBack", l, readBackVars(fields, l));
+      setReply(text);
+      void speak(text, l);
+    } else {
+      setReply(""); // the last reply was spoken in the other language
+    }
+  };
 
   /** The AI's reply: shown as the current line and spoken. */
   const say = useCallback(
@@ -176,10 +188,48 @@ export default function FarmerPage() {
     };
   }, [farmerId]);
 
-  const listen = async (n: Notification) => {
-    await speak(n.textLocal);
+  /** The order sentence in whichever language is on screen now (older orders keep their stored text). */
+  const orderText = useCallback(
+    (n: Notification) =>
+      n.facts
+        ? t("orderConfirmed", lang, {
+            buyer: buyerInScript(n.facts.buyerId, n.facts.buyerName, lang),
+            kg: n.facts.kg,
+            crop: cropName(n.facts.crop, lang),
+            price: n.facts.pricePerKg,
+            total: n.facts.total,
+            date: formatDate(n.facts.pickupDate, lang),
+          })
+        : n.textLocal,
+    [lang],
+  );
+
+  const markHeard = (n: Notification) => {
     fetch(`/api/notifications/${n.id}/heard`, { method: "POST" }).catch(() => {});
     setNotifications((ns) => ns.map((x) => (x.id === n.id ? { ...x, heard: true } : x)));
+  };
+
+  const listen = async (n: Notification) => {
+    await speak(orderText(n));
+    markHeard(n);
+  };
+
+  const unheard = notifications.filter((n) => !n.heard && n.facts);
+  const moment = notifications.find((n) => n.id === momentId) ?? null;
+
+  // A new sale takes over the screen once, when the farmer isn't in the middle of something.
+  useEffect(() => {
+    if (momentId || mic !== "idle") return;
+    const next = unheard.find((n) => !shownRef.current.has(n.id));
+    if (!next) return;
+    shownRef.current.add(next.id);
+    setMomentId(next.id);
+    if (interactedRef.current) void speak(orderText(next));
+  }, [unheard, momentId, mic, speak, orderText]);
+
+  const closeMoment = () => {
+    if (moment) markHeard(moment);
+    setMomentId(null);
   };
 
   const busy = mic === "thinking" || mic === "speaking";
@@ -194,7 +244,10 @@ export default function FarmerPage() {
   const isEmpty = Object.keys(fields).length === 0;
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-4 pb-52 pt-5">
+    <main
+      className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-4 pb-52 pt-5"
+      onPointerDown={() => (interactedRef.current = true)}
+    >
       <header className="flex items-center justify-between">
         <div>
           <p className="font-ledger text-3xl leading-none text-bahi">{ui("brand", lang)}</p>
@@ -254,7 +307,7 @@ export default function FarmerPage() {
             fields={fields}
             lang={lang}
             disabled={mic !== "idle"}
-            onTapEmpty={!isEmpty || tapToFill ? askForField : undefined}
+            onTapField={!isEmpty || tapToFill ? askForField : undefined}
           />
 
           {tapToFill && <p className="font-semibold text-bahi">{ui("tapField", lang)}</p>}
@@ -334,7 +387,7 @@ export default function FarmerPage() {
                 </span>
               )}
             </div>
-            <p className="text-lg leading-snug">{n.textLocal}</p>
+            <p className="text-lg leading-snug">{orderText(n)}</p>
             <button
               type="button"
               onClick={() => listen(n)}
@@ -383,6 +436,16 @@ export default function FarmerPage() {
             ) : (
               <>
                 <MicButton state={mic} onPress={toggleRecording} label={micLabel} />
+                {unheard.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setMomentId(unheard[0].id)}
+                    className="flex min-h-11 items-center gap-2 bg-bahi px-4 text-base font-semibold text-paper"
+                  >
+                    <BellRing aria-hidden className="h-5 w-5" strokeWidth={2.25} />
+                    {unheard.length} {ui("newOrders", lang)}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setShowKeyboard((s) => !s)}
@@ -394,6 +457,58 @@ export default function FarmerPage() {
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {moment?.facts && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={ui("youGet", lang)}
+          className="fixed inset-0 z-30 flex flex-col justify-center bg-page px-4"
+        >
+          <div className="ledger mx-auto flex w-full max-w-md flex-col gap-4 rounded-sm py-8 pl-14 pr-6">
+            <p className="flex items-center gap-2 text-lg font-semibold text-bahi">
+              <BellRing aria-hidden className="h-6 w-6" strokeWidth={2.25} />
+              {ui("newOrder", lang)}
+            </p>
+            <p className="text-2xl font-bold text-ink">
+              {moment.facts.kg} {ui("kg", lang)} {cropName(moment.facts.crop, lang)}
+            </p>
+            <div>
+              <p className="text-lg text-ink-soft">{ui("youGet", lang)}</p>
+              <p className="double-rule inline-block pb-1 text-6xl font-bold leading-none text-field tabular-nums">
+                {inr(moment.facts.total)}
+              </p>
+            </div>
+            <p className="text-lg text-ink">
+              <span className="text-ink-soft">{ui("boughtBy", lang)}: </span>
+              {buyerInScript(moment.facts.buyerId, moment.facts.buyerName, lang)}
+            </p>
+            <p className="text-lg text-ink">
+              <span className="text-ink-soft">{ui("pickup", lang)}: </span>
+              {formatDate(moment.facts.pickupDate, lang)}
+            </p>
+            <div className="mt-2 grid grid-cols-[1fr_1.4fr] gap-4">
+              <button
+                type="button"
+                onClick={() => speak(orderText(moment))}
+                disabled={busy}
+                className="flex min-h-14 items-center justify-center gap-2 border-2 border-ink bg-paper text-lg font-semibold text-ink disabled:opacity-60"
+              >
+                <Volume2 aria-hidden className="h-6 w-6" strokeWidth={2.25} />
+                {ui("listen", lang)}
+              </button>
+              <button
+                type="button"
+                autoFocus
+                onClick={closeMoment}
+                className="flex min-h-14 items-center justify-center gap-2 bg-field text-xl font-bold text-paper"
+              >
+                <Check aria-hidden className="h-6 w-6" strokeWidth={3} />
+                {ui("ok", lang)}
+              </button>
+            </div>
           </div>
         </div>
       )}

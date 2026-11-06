@@ -1,5 +1,6 @@
 import { computeSplit, orderTotals } from "./pricing";
 import type { Store } from "./store";
+import { buyerInScript } from "./readback";
 import { cropName, formatDate, t } from "./templates";
 import type { Buyer, Farmer, Listing, Order } from "./types";
 
@@ -18,7 +19,7 @@ export function templateConfirmation({ order, listing, buyer, farmer }: Paramete
   return {
     textEnglish: `${buyer.name} bought ${order.quantityKg} kg ${listing.crop} at ₹${order.split.farmerPerKg}/kg. You receive ₹${farmerTotal}. Pickup ${listing.pickupDate}.`,
     textLocal: t("orderConfirmed", farmer.lang, {
-      buyer: buyer.name,
+      buyer: buyerInScript(buyer.id, buyer.name, farmer.lang),
       kg: order.quantityKg,
       crop: cropName(listing.crop, farmer.lang),
       price: order.split.farmerPerKg,
@@ -78,6 +79,15 @@ export async function placeOrder(
     orderId: order.id,
     ...texts,
     farmerTotal: orderTotals(order.split, order.quantityKg).farmerTotal,
+    facts: {
+      buyerId: buyer.id,
+      buyerName: buyer.name,
+      crop: listing!.crop,
+      kg: order.quantityKg,
+      pricePerKg: order.split.farmerPerKg,
+      total: orderTotals(order.split, order.quantityKg).farmerTotal,
+      pickupDate: listing!.pickupDate,
+    },
     heard: false,
     createdAt: deps.now.toISOString(),
   });
