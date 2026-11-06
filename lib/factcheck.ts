@@ -19,6 +19,12 @@ export function checkReply(replyEnglish: string, allowed: number[]): boolean {
   return extractNumbers(replyEnglish).every((n) => allowed.some((a) => Math.abs(a - n) < 1e-9));
 }
 
+/** A read-back or confirmation must actually state the key numbers, not just avoid wrong ones. */
+export function mentionsAll(text: string, required: number[]): boolean {
+  const found = extractNumbers(text);
+  return required.every((r) => found.some((n) => Math.abs(n - r) < 1e-9));
+}
+
 /** Replace numbers with {{N1}}, {{N2}}… so a translator cannot alter them. */
 export function maskNumbers(text: string): { masked: string; values: string[] } {
   const values: string[] = [];

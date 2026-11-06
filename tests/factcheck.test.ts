@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { allowedNumbers, checkReply, extractNumbers, maskNumbers, unmaskNumbers } from "@/lib/factcheck";
+import { allowedNumbers, checkReply, extractNumbers, maskNumbers, mentionsAll, unmaskNumbers } from "@/lib/factcheck";
 
 const allowed = allowedNumbers({ quantityKg: 100, pricePerKg: 16, total: 1600, pickupDate: "2026-11-07" });
 
@@ -39,5 +39,14 @@ describe("masking", () => {
   });
   test("unmask tolerates spaces the translator inserts inside braces", () => {
     expect(unmaskNumbers("{{ N1 }} किलो", ["100"])).toBe("100 किलो");
+  });
+});
+
+describe("mentionsAll", () => {
+  test("true when every required number appears", () => {
+    expect(mentionsAll("100 kg at ₹16/kg", [100, 16])).toBe(true);
+  });
+  test("false when a required number is missing", () => {
+    expect(mentionsAll("Your tomatoes are listed!", [100, 16])).toBe(false);
   });
 });
