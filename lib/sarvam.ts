@@ -29,8 +29,11 @@ async function call(path: string, body: FormData | object): Promise<Record<strin
 
 async function stt(audio: Blob, mode: "translate" | "transcribe"): Promise<string> {
   const form = new FormData();
-  const ext = audio.type.includes("mp4") ? "m4a" : audio.type.includes("ogg") ? "ogg" : "webm"; // iPhone records mp4
-  form.append("file", audio, `speech.${ext}`);
+  // Browsers label recordings "audio/webm;codecs=opus"; Sarvam accepts the same bytes only as a bare
+  // type ("audio/webm") and rejects anything with parameters (HTTP 400 "Invalid file type").
+  const type = audio.type.split(";")[0].trim() || "audio/webm";
+  const ext = type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm"; // iPhone records mp4
+  form.append("file", new Blob([await audio.arrayBuffer()], { type }), `speech.${ext}`);
   form.append("model", "saaras:v4");
   form.append("mode", mode);
   const body = await call("/speech-to-text", form);
