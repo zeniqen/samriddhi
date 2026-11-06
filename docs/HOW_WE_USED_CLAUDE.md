@@ -11,7 +11,6 @@ We used the provided Claude account through **Claude Code** as our main build pa
 - We used it to question our own assumptions: ₹40 is a *retail* price, tomatoes spoil, and 100 kg is too small to ship alone. Those points shaped the price split.
 
 ## 2. Product and design decisions
-- **Brainstorming → design spec → implementation plan:** Claude asked one question at a time (stack, demo region, how speech becomes data). It proposed 2–3 options with trade-offs; we chose.
 - Our key choices, made with Claude:
   - **Voice-first, with AI asking for missing details one at a time**, but **the code checks every number before the farmer hears it.** If the AI says a wrong price, a fixed Hindi/Punjabi sentence is used instead.
   - **Translate to English first**, because the AI model we had access to was weak at Punjabi.

@@ -9,6 +9,7 @@ export interface Store {
   getListing(id: string): Promise<Listing | null>;
   saveListing(l: Listing): Promise<void>;
   getOrder(id: string): Promise<Order | null>;
+  listOrders(): Promise<Order[]>;
   saveOrder(o: Order): Promise<void>;
   listNotifications(farmerId: string): Promise<Notification[]>;
   getNotification(id: string): Promise<Notification | null>;
@@ -46,6 +47,7 @@ export function createMemoryStore(today: string = todayIST()): Store {
     getListing: async (id) => (listings.has(id) ? clone(listings.get(id)!) : null),
     saveListing: async (l) => void listings.set(l.id, clone(l)),
     getOrder: async (id) => (orders.has(id) ? clone(orders.get(id)!) : null),
+    listOrders: async () => [...orders.values()].map(clone).sort(byNewest),
     saveOrder: async (o) => void orders.set(o.id, clone(o)),
     listNotifications: async (farmerId) =>
       [...notifications.values()].filter((n) => n.farmerId === farmerId).map(clone).sort(byNewest),
@@ -92,6 +94,8 @@ function createRedisStore(redis: Redis): Store {
       await redis.sadd("listings", l.id);
     },
     getOrder: (id) => redis.get<Order>(`order:${id}`),
+    // Few orders in a pilot, so a key scan is fine and also finds orders saved before any index existed.
+    listOrders: async () => (await many<Order>(await redis.keys("order:*"))).sort(byNewest),
     saveOrder: async (o) => void (await redis.set(`order:${o.id}`, o)),
     async listNotifications(farmerId) {
       const ids = await redis.smembers(`notifs:${farmerId}`);

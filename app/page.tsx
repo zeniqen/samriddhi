@@ -44,6 +44,12 @@ export default function Home() {
             <span className="font-display text-xl font-semibold text-forest">I’m buying for a restaurant or shop</span>
             <span className="text-soil">See today’s board and order directly from farmers</span>
           </Link>
+          <Link
+            href="/partner"
+            className="self-center rounded-full px-4 py-2.5 text-base font-medium text-forest underline-offset-4 hover:underline"
+          >
+            I’m a pickup partner
+          </Link>
         </nav>
       </main>
     </div>

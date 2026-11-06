@@ -92,3 +92,9 @@ test("fixed confirmation names the buyer in the farmer's script", async () => {
   expect(r.ok).toBe(true);
   expect((await store.listNotifications("f1"))[0].textLocal).toContain("शर्मा किराना स्टोर");
 });
+
+test("store lists every placed order (for the pickup partner's run sheet)", async () => {
+  await placeOrder({ listingId: "l1", buyerId: "b1", quantityKg: 10 }, { store, confirm, now: NOW });
+  await placeOrder({ listingId: "l3", buyerId: "b2", quantityKg: 20 }, { store, confirm, now: NOW });
+  expect((await store.listOrders()).map((o) => o.quantityKg).sort()).toEqual([10, 20]);
+});
