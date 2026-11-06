@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { allowedNumbers, checkReply, extractNumbers, maskNumbers, mentionsAll, unmaskNumbers } from "@/lib/factcheck";
+import { allowedFromFields, allowedNumbers, checkReply, extractNumbers, maskNumbers, mentionsAll, unmaskNumbers } from "@/lib/factcheck";
 
 const allowed = allowedNumbers({ quantityKg: 100, pricePerKg: 16, total: 1600, pickupDate: "2026-11-07" });
 
@@ -48,5 +48,20 @@ describe("mentionsAll", () => {
   });
   test("false when a required number is missing", () => {
     expect(mentionsAll("Your tomatoes are listed!", [100, 16])).toBe(false);
+  });
+});
+
+describe("number words cannot bypass the check", () => {
+  test("checkReply sees spelled-out numbers", () => {
+    expect(checkReply("You will sell one thousand kilos at sixty rupees", allowed)).toBe(false);
+    expect(checkReply("You sold one hundred kilos at sixteen rupees", allowed)).toBe(true);
+  });
+});
+
+describe("allowedFromFields", () => {
+  test("only numbers the farmer has given so far", () => {
+    const a = allowedFromFields({ quantityKg: 100 });
+    expect(checkReply("Got it, 100 kg. What price per kg?", a)).toBe(true);
+    expect(checkReply("Got it, 1000 kg. What price?", a)).toBe(false);
   });
 });

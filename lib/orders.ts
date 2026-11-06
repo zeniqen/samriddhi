@@ -63,7 +63,8 @@ export async function placeOrder(
   if (!placed.ok) return placed;
 
   const { order, listing } = placed;
-  const farmer = (await store.getFarmer(listing!.farmerId))!;
+  const farmer = await store.getFarmer(listing!.farmerId);
+  if (!farmer) return { ok: true, order }; // order stands; nobody to notify
   const facts = { order, listing: listing!, buyer, farmer };
   let texts: { textEnglish: string; textLocal: string };
   try {

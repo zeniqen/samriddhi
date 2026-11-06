@@ -1,14 +1,22 @@
-import { isComplete, newConversation, runTurn, TAP_TO_FILL_AFTER } from "@/lib/conversation";
+import { isComplete, newConversation, runTurn, shouldCreateListing, TAP_TO_FILL_AFTER } from "@/lib/conversation";
 import { todayIST } from "@/lib/dates";
-import { allowedNumbers, mentionsAll } from "@/lib/factcheck";
+import { allowedFromFields, allowedNumbers, mentionsAll } from "@/lib/factcheck";
 import { llmTurn } from "@/lib/llm";
 import { localize } from "@/lib/localize";
 import { speechToEnglish, translateFromEnglish, translateToEnglish } from "@/lib/sarvam";
 import { getStore } from "@/lib/store";
 import { findVillageInNative } from "@/lib/validate";
+import { VILLAGE_NATIVE } from "@/lib/seed-data";
 import { findDateInNative } from "@/lib/fallback-parser";
 import { cropName, formatDate, t } from "@/lib/templates";
 import type { ConversationState, Lang, Listing } from "@/lib/types";
+
+/** English village name → its spelling in the farmer's script (index 0 Devanagari, last Gurmukhi). */
+function villageNames(village: string, lang: Lang): Record<string, string> {
+  const spellings = VILLAGE_NATIVE[village];
+  if (!spellings) return {};
+  return { [village]: lang === "pa" ? spellings[spellings.length - 1] : spellings[0] };
+}
 
 function readBackVars(s: ConversationState) {
   const f = s.fields as Required<ConversationState["fields"]>;
@@ -16,7 +24,7 @@ function readBackVars(s: ConversationState) {
     kg: f.quantityKg,
     crop: cropName(f.crop, s.lang),
     price: f.askPricePerKg,
-    village: f.village,
+    village: villageNames(f.village, s.lang)[f.village] ?? f.village,
     date: formatDate(f.pickupDate, s.lang),
   };
 }
@@ -45,6 +53,7 @@ export async function POST(req: Request) {
   if (!sessionId) return Response.json({ error: "sessionId required" }, { status: 400 });
 
   const store = getStore();
+  if (!(await store.getFarmer(farmerId))) return Response.json({ error: "unknown farmer" }, { status: 400 });
   const today = todayIST();
   let state = (await store.getConversation(sessionId)) ?? newConversation(sessionId, lang, farmerId);
   state = { ...state, lang };
@@ -87,6 +96,7 @@ export async function POST(req: Request) {
 
   // Read-back already heard? Must be decided before this turn adds anything.
   const wasComplete = isComplete(state);
+  const heardFields = state.fields;
 
   // Rules beat the LLM where the original words are unambiguous: translation garbles village names
   // ("गाँव दाखा" → "Show it to the village") and the LLM sometimes miscounts परसों (day after tomorrow).
@@ -106,7 +116,7 @@ export async function POST(req: Request) {
   const complete = isComplete(state);
 
   // Spoken "yes" after the read-back
-  if (wasComplete && r.intent === "confirm" && complete) {
+  if (shouldCreateListing({ wasComplete, intent: r.intent, before: heardFields, after: state.fields })) {
     const listing = await createListing(state);
     return respond(t("listingLive", lang), r.replyEnglish, { listingId: listing.id });
   }
@@ -119,14 +129,21 @@ export async function POST(req: Request) {
     const statesAll = mentionsAll(r.replyEnglish, [f.quantityKg, f.askPricePerKg, day]) && r.replyEnglish.includes(f.village);
     const reply = statesAll ? r.replyEnglish : "";
     const loc = await localize(
-      { replyEnglish: reply, lang, allowed, fallback: { key: "readBack", vars: readBackVars(state) } },
+      {
+        replyEnglish: reply,
+        lang,
+        allowed,
+        fallback: { key: "readBack", vars: readBackVars(state) },
+        names: villageNames(f.village, lang),
+      },
       { translate: translateFromEnglish },
     );
     return respond(loc.text, reply);
   }
 
   const loc = await localize(
-    { replyEnglish: r.replyEnglish, lang, allowed: null, fallback: { key: r.fallbackKey ?? "askAgain" } },
+    // Questions may only echo numbers the farmer has already given.
+    { replyEnglish: r.replyEnglish, lang, allowed: allowedFromFields(state.fields), fallback: { key: r.fallbackKey ?? "askAgain" } },
     { translate: translateFromEnglish },
   );
   return respond(loc.text, r.replyEnglish);

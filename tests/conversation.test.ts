@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { localize } from "@/lib/localize";
-import { newConversation, runTurn } from "@/lib/conversation";
+import { newConversation, runTurn, shouldCreateListing } from "@/lib/conversation";
 import { LlmError } from "@/lib/llm";
 import { t } from "@/lib/templates";
 import type { LlmTurn } from "@/lib/types";
@@ -88,4 +88,41 @@ describe("runTurn", () => {
     expect(r.state.fields.quantityKg).toBe(120);
     expect(r.intent).toBe("correct");
   });
+});
+
+describe("review fixes", () => {
+  test("localize rejects digits the translator invented", async () => {
+    const r = await localize(
+      { replyEnglish: "100 kg at ₹16", lang: "hi", allowed: [100, 16], fallback: { key: "askAgain" } },
+      { translate: async (s) => `${s} (5 दिन)` },
+    );
+    expect(r.usedTemplate).toBe(true);
+  });
+
+  test("localize protects spelled-out numbers from the translator", async () => {
+    let seen = "";
+    const r = await localize(
+      { replyEnglish: "One hundred kg at ₹16", lang: "hi", allowed: [100, 16], fallback: { key: "askAgain" } },
+      { translate: async (s) => ((seen = s), s) },
+    );
+    expect(seen).not.toMatch(/hundred/i);
+    expect(r.text).toContain("100");
+  });
+
+  const full = { crop: "tomato" as const, quantityKg: 100, askPricePerKg: 16, village: "Dakha", pickupDate: "2026-11-08" };
+  test("spoken yes creates a listing only if nothing changed this turn", () => {
+    expect(shouldCreateListing({ wasComplete: true, intent: "confirm", before: full, after: full })).toBe(true);
+    expect(shouldCreateListing({ wasComplete: true, intent: "confirm", before: full, after: { ...full, quantityKg: 200 } })).toBe(false);
+    expect(shouldCreateListing({ wasComplete: false, intent: "confirm", before: {}, after: full })).toBe(false);
+    expect(shouldCreateListing({ wasComplete: true, intent: "fill", before: full, after: full })).toBe(false);
+  });
+});
+
+test("localize keeps the village's native spelling (translator said ढाका)", async () => {
+  const r = await localize(
+    { replyEnglish: "100 kg from Dakha", lang: "hi", allowed: [100], fallback: { key: "askAgain" }, names: { Dakha: "दाखा" } },
+    { translate: async (s) => s.replace("Dakha", "ढाका") },
+  );
+  expect(r.text).toContain("दाखा");
+  expect(r.text).not.toContain("ढाका");
 });

@@ -2,7 +2,7 @@
 import { parseFallback } from "./fallback-parser";
 import { nextQuestionKey, type TemplateKey } from "./templates";
 import { validateUpdates } from "./validate";
-import type { ConversationState, Intent, Lang, LlmTurn } from "./types";
+import type { ConversationState, Intent, Lang, ListingFields, LlmTurn } from "./types";
 import type { llmTurn } from "./llm";
 
 const HISTORY_LIMIT = 6;
@@ -59,4 +59,16 @@ export async function runTurn(
     usedFallback,
     fallbackKey: complete ? "readBack" : nextQuestionKey(fields),
   };
+}
+
+const FIELD_KEYS = ["crop", "quantityKg", "askPricePerKg", "village", "pickupDate"] as const;
+
+/** A spoken "yes" creates the listing only if the farmer already heard exactly these values. */
+export function shouldCreateListing(x: {
+  wasComplete: boolean;
+  intent: Intent;
+  before: ListingFields;
+  after: ListingFields;
+}): boolean {
+  return x.wasComplete && x.intent === "confirm" && FIELD_KEYS.every((k) => x.before[k] === x.after[k]);
 }

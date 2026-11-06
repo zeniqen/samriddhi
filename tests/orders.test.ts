@@ -67,3 +67,10 @@ describe("placeOrder", () => {
     expect(r.ok).toBe(true);
   });
 });
+
+test("listing with an unknown farmer still places the order without crashing", async () => {
+  const l = (await store.getListing("l2"))!;
+  await store.saveListing({ ...l, farmerId: "ghost" });
+  const r = await placeOrder({ listingId: "l2", buyerId: "b1", quantityKg: 10 }, { store, confirm, now: NOW });
+  expect(r.ok).toBe(true);
+});

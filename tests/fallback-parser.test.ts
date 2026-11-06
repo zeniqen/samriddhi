@@ -34,3 +34,11 @@ test.each([
 ])("native date: %s", (s, expected) => {
   expect(findDateInNative(s, "2026-11-06")).toBe(expected);
 });
+
+test.each([
+  ["Price is 1,600 per quintal", { askPricePerKg: 16 }],
+  ["Rs 1,600 per quintal", { askPricePerKg: 16 }],
+  ["1,000 kilos", { quantityKg: 1000 }],
+])("comma numbers: %s", (s, expected) => {
+  expect(parseFallback(s, "2026-11-06")).toEqual(expected);
+});
