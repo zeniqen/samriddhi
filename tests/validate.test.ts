@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { addDays, todayIST } from "@/lib/dates";
-import { matchVillage, validateUpdates } from "@/lib/validate";
+import { findVillageInNative, matchVillage, validateUpdates } from "@/lib/validate";
 import { SEED_BUYERS, SEED_FARMERS, SEED_LISTINGS } from "@/lib/seed-data";
 
 describe("dates", () => {
@@ -55,5 +55,17 @@ describe("seed data", () => {
     expect(SEED_BUYERS).toHaveLength(3);
     expect(SEED_LISTINGS).toHaveLength(8);
     expect(SEED_LISTINGS.every((l) => l.crop === "tomato")).toBe(true);
+  });
+});
+
+describe("village from translation quirks", () => {
+  test("strips a glued 'pind'/'gaon' prefix", () => {
+    expect(matchVillage("Pindakha")).toBe("Dakha");
+    expect(matchVillage("gaonsahnewal")).toBe("Sahnewal");
+  });
+  test("finds village in a Devanagari or Gurmukhi transcript", () => {
+    expect(findVillageInNative("सौ किलो टमाटर सोलह रुपये किलो गांव दाखा परसों पिकअप।")).toBe("Dakha");
+    expect(findVillageInNative("ਸੌ ਕਿੱਲੋ ਟਮਾਟਰ ਪਿੰਡ ਸਾਹਨੇਵਾਲ")).toBe("Sahnewal");
+    expect(findVillageInNative("सौ किलो टमाटर")).toBeNull();
   });
 });

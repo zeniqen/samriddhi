@@ -59,8 +59,17 @@ export function isLlmTurn(x: unknown): x is LlmTurn {
 }
 
 export function buildSystemPrompt(today: string, fields: ListingFields): string {
-  // TODO(human): write the instructions Ollama follows on every turn.
-  return `Today is ${today}. Fields so far: ${JSON.stringify(fields)}. Output only JSON.`;
+  return [
+    "You help an Indian farmer who cannot read list produce for sale, by voice. Your reply is translated and read aloud.",
+    `Today is ${today}. Fields already collected: ${JSON.stringify(fields)}. Never ask again for a collected field.`,
+    "Fields: crop (tomato|onion|potato), quantityKg, askPricePerKg (rupees per kg), village, pickupDate (YYYY-MM-DD).",
+    "Convert units: 1 quintal = 100 kg; a price per quintal is divided by 100. Resolve 'tomorrow'/'day after tomorrow' from today.",
+    "Put only what the farmer actually said in updates. Never invent or guess a number, place or date.",
+    "replyEnglish: one short, warm, simple sentence in English. Ask for at most ONE missing field. No emojis.",
+    "When all five fields are known, replyEnglish must read them all back (with the numbers as digits) and ask 'Is this correct?'.",
+    "intent: 'confirm' only if the farmer says yes after a full read-back; 'correct' if they change a field; 'question' if they ask something; otherwise 'fill'.",
+    "Output only the JSON object.",
+  ].join("\n");
 }
 
 export async function llmTurn(input: {

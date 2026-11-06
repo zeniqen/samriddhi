@@ -5,6 +5,7 @@ import { llmTurn } from "@/lib/llm";
 import { localize } from "@/lib/localize";
 import { speechToEnglish, translateFromEnglish, translateToEnglish } from "@/lib/sarvam";
 import { getStore } from "@/lib/store";
+import { findVillageInNative } from "@/lib/validate";
 import { cropName, formatDate, t } from "@/lib/templates";
 import type { ConversationState, Lang, Listing } from "@/lib/types";
 
@@ -83,9 +84,19 @@ export async function POST(req: Request) {
   }
   if (!english.trim()) return respond(t("askAgain", lang), "");
 
+  // Read-back already heard? Must be decided before this turn adds anything.
   const wasComplete = isComplete(state);
+
+  // Translation can garble village names ("गाँव दाखा" → "Show it to the village"); the original keeps them.
+  const nativeVillage = findVillageInNative(original);
+  if (nativeVillage) state = { ...state, fields: { ...state.fields, village: nativeVillage } };
+
   const r = await runTurn(state, english, { llm: llmTurn, today });
-  state = { ...r.state, transcriptOriginal: [state.transcriptOriginal, original].filter(Boolean).join(" | ") };
+  state = {
+    ...r.state,
+    fields: nativeVillage ? { ...r.state.fields, village: nativeVillage } : r.state.fields,
+    transcriptOriginal: [state.transcriptOriginal, original].filter(Boolean).join(" | "),
+  };
 
   // Spoken "yes" after the read-back
   if (wasComplete && r.intent === "confirm" && r.complete) {

@@ -1,5 +1,5 @@
 import { daysBetween } from "./dates";
-import { CROPS, VILLAGES } from "./seed-data";
+import { CROPS, VILLAGE_NATIVE, VILLAGES } from "./seed-data";
 import type { Crop, ListingFields } from "./types";
 
 export const LIMITS = { minKg: 1, maxKg: 10_000, minPrice: 1, maxPrice: 200, maxDaysAhead: 14 } as const;
@@ -24,13 +24,24 @@ export function matchVillage(name: string): string | null {
     .toLowerCase()
     .replace(/\b(village|pind|gaon|gram)\b/g, "")
     .replace(/[^a-z]/g, "");
-  if (cleaned.length < 3) return null;
+  // Translation sometimes glues "pind"/"gaon" (village) onto the name: "Pindakha".
+  const candidates = [cleaned, cleaned.replace(/^(pind|gaon|gram)/, "")].filter((c) => c.length >= 3);
   let best: { v: string; d: number } | null = null;
-  for (const v of VILLAGES) {
-    const d = levenshtein(cleaned, v.toLowerCase());
-    if (!best || d < best.d) best = { v, d };
+  for (const c of candidates) {
+    for (const v of VILLAGES) {
+      const d = levenshtein(c, v.toLowerCase());
+      if (!best || d < best.d) best = { v, d };
+    }
   }
   return best && best.d <= 2 ? best.v : null;
+}
+
+/** Village named in the original Hindi/Punjabi transcript, which translation can garble. */
+export function findVillageInNative(transcript: string): string | null {
+  for (const [village, spellings] of Object.entries(VILLAGE_NATIVE)) {
+    if (spellings.some((s) => transcript.includes(s))) return village;
+  }
+  return null;
 }
 
 function normaliseCrop(raw: string): Crop | null {

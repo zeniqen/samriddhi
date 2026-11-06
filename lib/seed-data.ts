@@ -4,6 +4,18 @@ import type { Buyer, Crop, Farmer, Listing } from "./types";
 // Real place names in Ludhiana district; every person and business is fictional.
 export const VILLAGES = ["Dakha", "Mullanpur", "Sahnewal", "Doraha", "Raikot", "Jagraon", "Machhiwara", "Payal"];
 
+/** How each village is written in Devanagari and Gurmukhi (speech transcripts keep these intact). */
+export const VILLAGE_NATIVE: Record<string, string[]> = {
+  Dakha: ["दाखा", "ਦਾਖਾ"],
+  Mullanpur: ["मुल्लांपुर", "मुल्लानपुर", "ਮੁੱਲਾਂਪੁਰ"],
+  Sahnewal: ["साहनेवाल", "ਸਾਹਨੇਵਾਲ"],
+  Doraha: ["दोराहा", "ਦੋਰਾਹਾ"],
+  Raikot: ["रायकोट", "ਰਾਏਕੋਟ"],
+  Jagraon: ["जगरांव", "जगराओं", "ਜਗਰਾਉਂ"],
+  Machhiwara: ["माछीवाड़ा", "ਮਾਛੀਵਾੜਾ"],
+  Payal: ["पायल", "ਪਾਇਲ"],
+};
+
 export const CROPS: Crop[] = ["tomato", "onion", "potato"];
 
 export const SEED_FARMERS: Farmer[] = [
