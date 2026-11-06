@@ -1,5 +1,15 @@
+import { buyerOrders } from "@/lib/buyer-orders";
 import { placeOrder, templateConfirmation } from "@/lib/orders";
 import { getStore } from "@/lib/store";
+
+/** A buyer's own orders, newest first. */
+export async function GET(req: Request) {
+  const buyerId = new URL(req.url).searchParams.get("buyerId");
+  if (!buyerId) return Response.json({ error: "buyerId required" }, { status: 400 });
+  const store = getStore();
+  const [orders, listings, farmers] = await Promise.all([store.listOrders(), store.listListings(), store.listFarmers()]);
+  return Response.json({ orders: buyerOrders({ orders, listings, farmers, buyerId }) });
+}
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
