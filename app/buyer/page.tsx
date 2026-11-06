@@ -120,7 +120,9 @@ export default function BuyerPage() {
                   return (
                     <tr
                       key={l.id}
-                      className={`transition-colors ${isSelected ? "bg-sage-soft" : "hover:bg-page/70"}`}
+                      // The whole row selects; the name button inside stays as the keyboard/screen-reader control.
+                      onClick={() => open(l)}
+                      className={`cursor-pointer transition-colors ${isSelected ? "bg-sage-soft" : "hover:bg-sage-soft/50"}`}
                     >
                       <td className="py-3.5 pl-6">
                         <button
