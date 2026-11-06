@@ -1,10 +1,13 @@
 import Link from "next/link";
+import { SquigglyText } from "@/components/ui/squiggly-text";
 
 export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 px-4 py-12">
       <div>
-        <h1 className="font-ledger text-6xl leading-none text-bahi">समृद्धि</h1>
+        <h1 className="font-ledger text-6xl leading-none text-bahi">
+          <SquigglyText>समृद्धि</SquigglyText>
+        </h1>
         <p className="mt-2 font-ledger text-2xl text-ink">Samriddhi</p>
         <p className="mt-4 text-lg text-ink">
           Farmers sell by speaking Hindi or Punjabi. City buyers see where every rupee of the price goes.
