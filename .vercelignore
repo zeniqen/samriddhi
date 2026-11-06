@@ -1,0 +1,6 @@
+.env*
+!.env.example
+.superpowers
+.next
+node_modules
+scripts

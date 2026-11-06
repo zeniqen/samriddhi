@@ -125,8 +125,8 @@ const g = globalThis as unknown as { __kisanStore?: Store };
 
 export function getStore(): Store {
   if (g.__kisanStore) return g.__kisanStore;
-  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
   if (!(url && token) && process.env.VERCEL) {
     // Serverless instances don't share memory: conversations and orders would vanish between requests.
     console.error("[store] UPSTASH_REDIS_REST_URL/TOKEN missing on Vercel — using per-instance memory. Connect Upstash.");
