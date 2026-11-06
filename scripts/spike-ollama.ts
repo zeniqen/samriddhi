@@ -1,4 +1,5 @@
 // Throwaway model comparison. Usage:
+export {};
 //   npx tsx --env-file=.env.local scripts/spike-ollama.ts gpt-oss:120b other-model ...
 const KEY = process.env.OLLAMA_API_KEY;
 const BASE = process.env.OLLAMA_BASE_URL ?? "https://ollama.com";
